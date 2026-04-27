@@ -1,6 +1,7 @@
 ---
 name: ps-tonic-patterns
-version: 1.0.0
+version: 1.1.0
+rust_version: v1.95.0
 description: |
   Common patterns for building tonic gRPC services in Pastel Sketchbook Rust
   projects — server setup, proto code generation, interceptors, context logging
@@ -610,6 +611,10 @@ Review items specific to tonic gRPC services. These complement the general Rust 
 - **Test interceptors in isolation** with constructed `Request<()>`.
 
 ---
+
+## General rule
+
+Always code with the **latest released versions** of all dependencies. Do not pin to outdated versions — check crates.io for the current stable release before adding or updating a dependency.
 
 ## Cargo.toml essentials
 

@@ -1,6 +1,7 @@
 ---
 name: ps-ratatui-patterns
-version: 1.0.0
+version: 1.1.0
+rust_version: v1.95.0
 description: |
   Common patterns for building ratatui + crossterm TUIs in Pastel Sketchbook
   Rust projects — terminal lifecycle, app layout, theme system, mouse-driven
@@ -783,6 +784,12 @@ Review items specific to ratatui TUI apps. These complement the general Rust rul
 - **Render to `TestBackend`.** Use `ratatui::backend::TestBackend` for snapshot/assertion tests of UI output.
 - **Unit test state transitions.** Test `App` methods (key handling, data updates) without rendering.
 - **Mock event sources.** Feed synthetic `Event` sequences to verify interaction flows.
+
+---
+
+## General rule
+
+Always code with the **latest released versions** of all dependencies. Do not pin to outdated versions — check crates.io for the current stable release before adding or updating a dependency.
 
 ---
 

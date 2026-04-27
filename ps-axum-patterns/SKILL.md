@@ -1,6 +1,7 @@
 ---
 name: ps-axum-patterns
-version: 1.0.0
+version: 1.1.0
+rust_version: v1.95.0
 description: |
   Common patterns for building Axum web services in Pastel Sketchbook Rust
   projects — app/router composition, Arc<AppState> with atomics, tower-http
@@ -581,6 +582,10 @@ Review items specific to Axum services. These complement the general Rust rules 
 - **Config tests use mock env function** — no reliance on real environment.
 
 ---
+
+## General rule
+
+Always code with the **latest released versions** of all dependencies. Do not pin to outdated versions — check crates.io for the current stable release before adding or updating a dependency.
 
 ## Cargo.toml essentials
 
