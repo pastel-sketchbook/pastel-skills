@@ -1,6 +1,14 @@
 ---
-name: ratatui-patterns
-description: Common patterns for building ratatui + crossterm TUIs in Pastel Sketchbook Rust projects — terminal lifecycle, app layout, theme system, mouse-driven draggable split resizing, centered popup overlays, and UTF-8 / CJK aware string helpers. Use when scaffolding a new ratatui app, adding a popup or help overlay, building a multi-theme TUI, supporting mouse-resizable panels, or rendering text that may contain non-ASCII characters.
+name: ps-ratatui-patterns
+version: 1.0.0
+description: |
+  Common patterns for building ratatui + crossterm TUIs in Pastel Sketchbook
+  Rust projects — terminal lifecycle, app layout, theme system, mouse-driven
+  draggable split resizing, centered popup overlays, and UTF-8 / CJK aware
+  string helpers.
+  Use when scaffolding a new ratatui app, adding a popup or help overlay,
+  building a multi-theme TUI, supporting mouse-resizable panels, or rendering
+  text that may contain non-ASCII characters.
 ---
 
 # Ratatui TUI Patterns
@@ -723,6 +731,60 @@ src/
 ```
 
 Keep `app.rs` free of `ratatui::widgets::*` imports beyond stateful widgets (`TableState`, `ListState`); all rendering belongs under `ui/`.
+
+## 9. Code quality checklist
+
+Review items specific to ratatui TUI apps. These complement the general Rust rules in the `code-quality-audit` skill.
+
+### Error handling
+- **No `unwrap()` in non-test code.** Use `?` with `.context()` or explicit match.
+- **`.expect()` only with a safety comment** explaining the invariant.
+- **Terminal restore on error.** `disable_raw_mode` + `LeaveAlternateScreen` must execute even when `run_loop` returns `Err`. Use a cleanup function or `scopeguard`.
+- **`anyhow::Result<()>` in `main`** with `.context()` on each fallible step.
+- **No `panic!()` / `todo!()` / `unimplemented!()`** in non-test code.
+
+### Rendering & layout
+- **No logic in `draw()`.** Rendering functions should be pure transforms from state to frame — no mutation, no I/O, no allocation of new data structures.
+- **Clamp all user-controlled sizes.** Split ratios, popup dimensions, and scroll offsets must be clamped to valid ranges. Never allow a panel to have zero width/height.
+- **Saturating arithmetic for TUI math.** Use `.saturating_sub()` for all `u16` subtraction (terminal coordinates underflow easily).
+- **Safe casts.** `as u16` from `usize`/`u32` must be preceded by `.min(u16::MAX as _)` or equivalent.
+- **No indexing without bounds check.** Use `.get()` for list/table items accessed by selected index — selection state can desync from data.
+
+### State management
+- **`app.rs` owns all mutable state.** UI modules receive `&App` (or relevant fields) read-only.
+- **No `ratatui::widgets::*` imports in `app.rs`** beyond stateful widgets (`TableState`, `ListState`, `ScrollbarState`).
+- **`#[must_use]` on constructors** and builder methods.
+
+### Concurrency & async
+- **Background work via channels.** Use `mpsc` or `crossbeam` channels between worker threads and the main event loop. Never block the event loop.
+- **`drain_results()` pattern.** Pull all pending messages from the channel each tick — do not process one-at-a-time.
+- **No blocking I/O on the main thread.** File reads, network calls, and heavy computation go in worker threads or `spawn_blocking`.
+
+### Event handling
+- **Filter `KeyEventKind::Press` only.** Crossterm fires Press/Release/Repeat — handle only `Press` unless deliberately supporting key repeat.
+- **Mouse events check bounds.** Before acting on `MouseEvent`, verify the click coordinates fall within the target widget's `Rect`.
+- **Tick rate is configurable or constant.** Default 250ms. Never spin without a tick delay.
+
+### Unicode & text
+- **Use `unicode-width` for display width**, not `.len()` or `.chars().count()`.
+- **Truncation respects grapheme clusters.** Use `unicode-segmentation` when truncating user-visible text.
+- **Test with CJK / emoji.** Double-width characters break naive column math.
+
+### Terminal safety
+- **Always restore terminal state.** `disable_raw_mode`, `LeaveAlternateScreen`, `DisableMouseCapture` — even on panic. Consider a `Drop` guard.
+- **No `print!` / `println!` while in raw mode.** All output goes through the ratatui `Frame`. Stray prints corrupt the terminal.
+- **Handle `Resize` events.** Redraw immediately on terminal resize — do not wait for the next tick.
+
+### Observability
+- **No `println!` debugging left in.** Use `tracing` with a file appender or `tui-logger` if runtime logging is needed.
+- **`#[tracing::instrument]` on worker functions** — skip large/non-Display args.
+
+### Testing
+- **Render to `TestBackend`.** Use `ratatui::backend::TestBackend` for snapshot/assertion tests of UI output.
+- **Unit test state transitions.** Test `App` methods (key handling, data updates) without rendering.
+- **Mock event sources.** Feed synthetic `Event` sequences to verify interaction flows.
+
+---
 
 ## Reference apps
 
