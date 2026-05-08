@@ -19,6 +19,18 @@ This repository exists to **create, curate, and maintain skills for AI agents** 
 
 When creating a new skill, **always load the `building-skills` skill first** — before researching prior art or writing any `SKILL.md`. It defines the required structure, naming conventions, and frontmatter format.
 
+## Quality Validation with Waza
+
+Use [waza](https://github.com/microsoft/waza) to validate skills before submission:
+
+- `waza check <skill-name>` — compliance score, token budget, spec validation, link checks, schema validation.
+- `waza suggest <skill-name>` — generate eval.yaml and task suggestions.
+- `waza run eval.yaml` — run the evaluation suite.
+- `waza tokens suggest` — get token reduction tips when over budget.
+- `waza dev` — interactive compliance improvement.
+
+Always run `waza check` before committing skill changes. Target: **ready for submission** status.
+
 ## Conventions
 
 - One skill per directory; the directory name is the skill name.

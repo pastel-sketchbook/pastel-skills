@@ -1,0 +1,12 @@
+name: multi-theme-tui
+id: multi-theme-tui
+description: Implement a multi-theme system for a ratatui TUI application
+inputs:
+  prompt: |
+    Build a theme system for a ratatui application that supports multiple color
+    palettes (dark, light, nord). Requirements:
+    - Theme struct with semantic Color slots
+    - Pass theme by reference to rendering functions
+    - Paint theme background first so light themes work correctly
+    - Support theme switching at runtime
+    Use ps-ratatui-patterns for proper theme architecture.

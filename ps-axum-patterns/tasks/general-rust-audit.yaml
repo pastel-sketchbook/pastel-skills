@@ -1,0 +1,12 @@
+name: general-rust-audit
+id: general-rust-audit
+description: "ANTI-TRIGGER: General Rust code quality audit (should not invoke ps-axum-patterns)"
+inputs:
+  prompt: |
+    I need a general code quality audit for my Rust project. Can you check for:
+    - Unused variables and imports
+    - Error handling best practices
+    - Memory safety patterns
+    - Test coverage
+    This is for a generic Rust project, not specific to any framework.
+    Use standard Rust linting and analysis tools.

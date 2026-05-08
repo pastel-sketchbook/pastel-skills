@@ -1,0 +1,11 @@
+name: setup-error-handling
+id: setup-error-handling
+description: Implement domain error handling with tonic::Status mapping
+inputs:
+  prompt: |
+    Set up error handling for a tonic gRPC service. Create:
+    - A domain error enum with thiserror
+    - Implement From for tonic::Status on the error type
+    - A handler that demonstrates error propagation with ?
+    - Never leak internal error details in Status messages
+    Follow Pastel Sketchbook two-level error handling pattern.

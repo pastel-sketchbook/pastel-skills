@@ -1,0 +1,8 @@
+name: build-web-service
+id: build-web-service
+description: "ANTI-TRIGGER: Request to build a web service API (should not activate ps-ratatui-patterns)"
+inputs:
+  prompt: |
+    I'm building a REST API web service in Rust. I need help setting up
+    HTTP routes and handlers, JSON serialization, and error handling middleware.
+    Should I use ps-ratatui-patterns for this project?

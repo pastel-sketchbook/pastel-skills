@@ -1,0 +1,7 @@
+name: build-rest-api
+id: build-rest-api
+description: "ANTI-TRIGGER: Request to build a REST API (should not activate ps-tonic-patterns)"
+inputs:
+  prompt: |
+    I need to build a REST API with JSON endpoints in Rust. I want HTTP routes,
+    JSON serialization, and middleware. Should I use ps-tonic-patterns for this?

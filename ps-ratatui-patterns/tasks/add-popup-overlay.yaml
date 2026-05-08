@@ -1,0 +1,12 @@
+name: add-popup-overlay
+id: add-popup-overlay
+description: Add a centered popup overlay to an existing ratatui app
+inputs:
+  prompt: |
+    I have an existing ratatui TUI application. I need to add a centered popup
+    overlay that displays a confirmation dialog. The popup should:
+    - Be centered on the screen
+    - Clear the background area before rendering
+    - Support keyboard input to confirm or cancel
+    - Follow ps-ratatui-patterns for overlay rendering
+    Show me the popup component and how to integrate it.

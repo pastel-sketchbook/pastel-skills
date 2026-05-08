@@ -1,0 +1,15 @@
+name: add-axum-routes
+id: add-axum-routes
+description: Add routes and handlers to an existing Axum service
+inputs:
+  prompt: |
+    I have a skeleton Axum service (see fixture). Add the following routes:
+    - GET /api/users/:id - retrieve a user by ID
+    - POST /api/users - create a new user (JSON body)
+    - DELETE /api/users/:id - delete a user
+    Each handler should:
+    - Use proper extractors (Path, Json, State)
+    - Include #[tracing::instrument] for logging
+    - Return appropriate HTTP status codes
+    - Follow Pastel Sketchbook patterns for handler organization
+    The fixture contains the router setup. Extend it with these routes.

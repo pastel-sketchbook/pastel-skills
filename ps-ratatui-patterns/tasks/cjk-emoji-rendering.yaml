@@ -1,0 +1,11 @@
+name: cjk-emoji-rendering
+id: cjk-emoji-rendering
+description: Render CJK and emoji text correctly in a ratatui TUI
+inputs:
+  prompt: |
+    I need to display CJK (Chinese/Japanese/Korean) and emoji text correctly
+    in my ratatui TUI app. Show me how to:
+    - Use unicode-width to calculate display widths
+    - Avoid byte slicing that breaks multi-byte characters
+    - Handle emoji and combining characters
+    Use ps-ratatui-patterns for the correct approach.

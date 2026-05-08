@@ -1,0 +1,12 @@
+name: setup-error-handling
+id: setup-error-handling
+description: Implement domain error handling with thiserror
+inputs:
+  prompt: |
+    Set up error handling for an Axum service using thiserror and anyhow.
+    Create:
+    - A domain error enum with thiserror using variants for validation, not_found, and internal_error
+    - Implement IntoResponse for the error type
+    - Add a handler that demonstrates error propagation with the ? operator
+    - Use anyhow at the binary level for top-level error handling
+    Follow Pastel Sketchbook two-level error handling pattern (thiserror for domain, anyhow for binary).

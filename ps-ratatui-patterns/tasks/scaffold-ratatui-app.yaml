@@ -1,0 +1,12 @@
+name: scaffold-ratatui-app
+id: scaffold-ratatui-app
+description: Scaffold a new ratatui TUI application with terminal lifecycle setup
+inputs:
+  prompt: |
+    Create a new Rust ratatui TUI application from scratch.
+    Include:
+    - Proper terminal lifecycle (alternate screen, raw mode, mouse capture)
+    - App state structure
+    - Basic event loop with 250ms tick rate
+    - Graceful shutdown on Ctrl+C
+    Use ps-ratatui-patterns to follow Pastel Sketchbook conventions.

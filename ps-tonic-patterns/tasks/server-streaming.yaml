@@ -1,0 +1,11 @@
+name: server-streaming
+id: server-streaming
+description: Implement a server-streaming RPC with bounded channels
+inputs:
+  prompt: |
+    Add a server-streaming RPC to my tonic service. Requirements:
+    - Use bounded mpsc channel for backpressure
+    - Spawn producer task to avoid blocking the handler
+    - Check tx.send() result and break on client disconnect
+    - Return ReceiverStream wrapped in Response
+    Follow Pastel Sketchbook patterns for tonic streaming.

@@ -1,0 +1,51 @@
+name: ps-axum-patterns-eval
+description: Evaluation suite for ps-axum-patterns skill
+skill: ps-axum-patterns
+version: "1.0"
+config:
+  trials_per_task: 1
+  timeout_seconds: 300
+  parallel: false
+  executor: copilot-sdk
+  model: claude-opus-4.6
+graders:
+  - type: text
+    name: axum_patterns_present
+    config:
+      contains:
+        - "Axum"
+        - "AppState"
+      regex_match:
+        - "(?i)(route|handler|middleware|extract)"
+  - type: file
+    name: axum_project_structure
+    config:
+      must_exist:
+        - "Cargo.toml"
+        - "src/main.rs"
+  - type: trigger
+    name: positive_trigger_check
+    config:
+      skill_path: ps-axum-patterns
+      mode: positive
+      threshold: 0.5
+  - type: trigger
+    name: negative_trigger_check
+    config:
+      skill_path: ps-axum-patterns
+      mode: negative
+      threshold: 0.6
+  - type: text
+    name: no_generic_advice
+    config:
+      not_contains:
+        - "here are some general web service patterns"
+        - "here is how to build any web framework"
+      regex_not_match:
+        - "(?i)(tonic|grpc|ratatui|iced)"
+metrics:
+  - name: task_completion
+    weight: 1.0
+    threshold: 0.75
+tasks:
+  - "tasks/*.yaml"

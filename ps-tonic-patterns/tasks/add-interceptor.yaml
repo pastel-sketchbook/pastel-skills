@@ -1,0 +1,10 @@
+name: add-interceptor
+id: add-interceptor
+description: Add auth and request-ID interceptors to a tonic gRPC service
+inputs:
+  prompt: |
+    I have a tonic gRPC service. Add:
+    - An auth interceptor that checks x-auth-token metadata
+    - A request-ID interceptor that generates UUID v7 trace IDs
+    - Compose both interceptors into a single function
+    Follow Pastel Sketchbook patterns for tonic interceptors.

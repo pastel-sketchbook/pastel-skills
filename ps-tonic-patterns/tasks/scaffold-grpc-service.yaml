@@ -1,0 +1,12 @@
+name: scaffold-grpc-service
+id: scaffold-grpc-service
+description: Scaffold a new tonic gRPC service with standard Pastel Sketchbook patterns
+inputs:
+  prompt: |
+    Create a new tonic gRPC service from scratch. Include:
+    - Proto file and build.rs for code generation
+    - Server setup with tonic transport
+    - Health service for Kubernetes probes
+    - Graceful shutdown with CancellationToken
+    - Tracing initialization
+    Follow Pastel Sketchbook conventions for tonic services.

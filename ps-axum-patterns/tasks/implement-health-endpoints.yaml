@@ -1,0 +1,13 @@
+name: implement-health-endpoints
+id: implement-health-endpoints
+description: Add health and readiness check endpoints to an Axum service
+inputs:
+  prompt: |
+    Add health and readiness endpoints to an Axum service:
+    - GET /health - returns 200 with JSON { "status": "healthy" }
+    - GET /ready - returns 200 with JSON { "status": "ready" } only if service is initialized
+    Use the fixture service structure. Add:
+    - A readiness flag in AppState (using Arc with AtomicBool for async-safe access)
+    - Both endpoints with proper instrumentation
+    - Set ready to true after initialization completes
+    Follow Pastel Sketchbook patterns for health checks.

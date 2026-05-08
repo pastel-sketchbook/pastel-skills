@@ -1,0 +1,13 @@
+name: scaffold-axum-service
+id: scaffold-axum-service
+description: Create a new Axum web service with standard Pastel Sketchbook patterns
+inputs:
+  prompt: |
+    I need to scaffold a new Axum web service following Pastel Sketchbook patterns.
+    Create the basic project structure with:
+    - Cargo.toml with Axum, tokio, and tower-http dependencies
+    - src/main.rs and src/lib.rs separation
+    - An AppState struct using Arc for shared state
+    - A basic health check endpoint at /health
+    - Tracing initialization with tower-http
+    Make sure to follow Pastel Sketchbook conventions for Axum services.
