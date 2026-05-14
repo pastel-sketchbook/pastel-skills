@@ -1,0 +1,16 @@
+id: backend-logic-antitrigger
+description: >
+  Anti-trigger task — requesting backend API logic changes. The ps-design-iterator
+  skill should NOT be invoked for backend or non-UI work.
+inputs:
+  prompt: |
+    Our Express API endpoint POST /api/orders is returning 500 errors intermittently.
+    Review the route handler in src/routes/orders.ts, add proper error handling,
+    validate the request body with zod, and add structured logging for each request.
+graders:
+  - type: trigger
+    name: negative_trigger
+    config:
+      skill_path: ps-design-iterator/SKILL.md
+      mode: negative
+      threshold: 0.6

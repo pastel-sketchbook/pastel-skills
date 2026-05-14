@@ -1,0 +1,51 @@
+id: competitor-inspired-redesign
+description: >
+  Perform a competitor-inspired redesign of a pricing section, visiting 2–3 reference
+  sites, extracting design techniques, and applying them over several iterations.
+inputs:
+  prompt: |
+    Redesign the pricing section in fixtures/landing-page.html inspired by
+    how Stripe and Vercel handle pricing. Visit those sites, screenshot their
+    pricing sections, extract 3–5 techniques, then apply them across 3 design
+    iterations on our page. Document extracted techniques and iteration changes.
+graders:
+  - type: trigger
+    name: positive_trigger
+    config:
+      skill_path: ps-design-iterator/SKILL.md
+      mode: positive
+      threshold: 0.6
+  - type: behavior
+    name: competitor_research_tools
+    config:
+      required_tools:
+        - puppeteer_screenshot
+        - edit
+  - type: action_sequence
+    name: research_then_iterate
+    config:
+      matching_mode: in_order_match
+      expected_actions:
+        - puppeteer_screenshot
+        - edit
+        - puppeteer_screenshot
+  - type: prompt
+    name: competitor_research_judge
+    config:
+      model: claude-sonnet-4.5
+      continue_session: true
+      prompt: |
+        Review the agent's competitor-inspired redesign work.
+
+        Evaluate each criterion independently and call set_waza_grade_pass or
+        set_waza_grade_fail for each (4 total calls):
+
+        1. Competitor research: Did the agent visit and screenshot at least one
+           competitor site (Stripe, Vercel, Linear, or Notion)?
+        2. Technique extraction: Did the agent explicitly list or describe design
+           techniques extracted from competitor sites?
+        3. Applied techniques: Did the agent's code changes reflect at least one
+           extracted competitor technique (e.g., gradient pricing cards, toggle
+           billing, highlighted "popular" tier)?
+        4. Iteration documentation: Did the agent document changes per iteration
+           with clear before/after reasoning?

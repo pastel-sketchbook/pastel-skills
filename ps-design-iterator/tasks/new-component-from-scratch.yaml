@@ -1,0 +1,17 @@
+id: new-component-from-scratch
+description: >
+  Anti-trigger task — requesting a brand-new UI component built from scratch.
+  The ps-design-iterator skill should NOT be invoked for greenfield component creation.
+inputs:
+  prompt: |
+    Build a new testimonials carousel component from scratch for our React app.
+    It should support 5 testimonial cards, auto-advance every 4 seconds, include
+    dot indicators, and use CSS transitions for the slide animation.
+    Create the component file at src/components/TestimonialsCarousel.tsx.
+graders:
+  - type: trigger
+    name: negative_trigger
+    config:
+      skill_path: ps-design-iterator/SKILL.md
+      mode: negative
+      threshold: 0.6

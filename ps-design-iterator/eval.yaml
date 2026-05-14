@@ -1,0 +1,22 @@
+name: ps-design-iterator-eval
+description: Evaluation suite for ps-design-iterator — screenshot-driven iterative UI refinement
+skill: ps-design-iterator
+version: "1.0"
+config:
+  trials_per_task: 1
+  timeout_seconds: 600
+  parallel: false
+  executor: copilot-sdk
+  model: claude-sonnet-4.6
+graders:
+  - type: behavior
+    name: reasonable_execution_limits
+    config:
+      max_tool_calls: 80
+      max_duration_ms: 480000
+metrics:
+  - name: task_completion
+    weight: 1.0
+    threshold: 0.75
+tasks:
+  - "tasks/*.yaml"

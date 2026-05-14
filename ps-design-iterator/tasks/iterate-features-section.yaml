@@ -1,0 +1,49 @@
+id: iterate-features-section
+description: >
+  Iteratively refine an existing features/benefits section over several passes,
+  improving card layout, icon treatment, and typographic rhythm.
+inputs:
+  prompt: |
+    The features section in fixtures/landing-page.html uses a plain three-column
+    card grid. Run the design iterator for 4 iterations to improve it.
+    Consider: card depth/shadow, icon badges, hover states, alternating rhythm,
+    and better font pairing. Take a screenshot at the start and end of each pass.
+graders:
+  - type: trigger
+    name: positive_trigger
+    config:
+      skill_path: ps-design-iterator/SKILL.md
+      mode: positive
+      threshold: 0.6
+  - type: behavior
+    name: uses_required_tools
+    config:
+      required_tools:
+        - puppeteer_screenshot
+        - edit
+      max_tool_calls: 60
+  - type: action_sequence
+    name: iterative_edit_sequence
+    config:
+      matching_mode: any_order_match
+      expected_actions:
+        - puppeteer_screenshot
+        - puppeteer_screenshot
+        - edit
+  - type: prompt
+    name: features_section_judge
+    config:
+      model: claude-sonnet-4.5
+      continue_session: true
+      prompt: |
+        Review the agent's iterative work on the features section.
+
+        Evaluate each criterion and call set_waza_grade_pass or set_waza_grade_fail
+        for each (3 total calls):
+
+        1. Multiple iterations: Did the agent perform at least 2 distinct iteration
+           passes (screenshot → analyze → implement → document)?
+        2. Visual depth improvements: Did the agent improve at least one of:
+           card shadows, hover states, badge/icon treatment, or typographic contrast?
+        3. Preserved functionality: Did the agent keep all existing feature content
+           intact while improving the visual presentation?

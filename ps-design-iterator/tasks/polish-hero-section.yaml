@@ -1,0 +1,50 @@
+id: polish-hero-section
+description: >
+  Polish an existing landing page hero section through multiple screenshot-driven
+  iteration passes, improving hierarchy, typography, and visual polish.
+inputs:
+  prompt: |
+    The landing page at fixtures/landing-page.html has a hero section that feels flat and generic.
+    Please run the design iterator to refine it over 5 iterations. Each pass should take a
+    screenshot, identify 3–5 improvements, implement them, and document what changed.
+    Focus on hierarchy, typography, whitespace, and a cohesive color accent.
+graders:
+  - type: trigger
+    name: positive_trigger
+    config:
+      skill_path: ps-design-iterator/SKILL.md
+      mode: positive
+      threshold: 0.6
+  - type: behavior
+    name: takes_screenshots
+    config:
+      required_tools:
+        - puppeteer_screenshot
+        - edit
+  - type: action_sequence
+    name: screenshot_edit_cycle
+    config:
+      matching_mode: in_order_match
+      expected_actions:
+        - puppeteer_screenshot
+        - edit
+        - puppeteer_screenshot
+  - type: prompt
+    name: iteration_quality_judge
+    config:
+      model: claude-sonnet-4.5
+      continue_session: true
+      prompt: |
+        Review the agent's design iteration work on the hero section.
+
+        Evaluate each criterion independently and call set_waza_grade_pass or
+        set_waza_grade_fail for each one (4 total calls):
+
+        1. Screenshot-driven workflow: Did the agent take at least one screenshot
+           before making changes and at least one after?
+        2. Documented changes: Did the agent document what changed and why per
+           iteration (e.g. "## Iteration N/Total" headings or equivalent)?
+        3. Targeted improvements: Did the agent make focused visual changes
+           (typography, spacing, color, layout) rather than rewriting everything?
+        4. No generic aesthetics: Did the agent avoid Inter/Arial/Roboto fonts and
+           "AI slop" design clichés in favor of distinctive choices?
