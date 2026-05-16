@@ -1,0 +1,9 @@
+name: build-rust-service
+id: build-rust-service
+description: "ANTI-TRIGGER: Build a Rust web service (should not invoke ps-flutter-patterns)"
+inputs:
+  prompt: |
+    I need to build a new REST API service in Rust using Axum.
+    Set up the project with Cargo.toml, router composition, shared state
+    with Arc, health check endpoints, and tower-http tracing.
+    Follow standard Rust web service patterns.

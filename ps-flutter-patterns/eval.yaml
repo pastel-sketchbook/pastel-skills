@@ -1,0 +1,51 @@
+name: ps-flutter-patterns-eval
+description: Evaluation suite for ps-flutter-patterns skill
+skill: ps-flutter-patterns
+version: "1.0"
+config:
+  trials_per_task: 1
+  timeout_seconds: 300
+  parallel: false
+  executor: copilot-sdk
+  model: claude-opus-4.6
+graders:
+  - type: text
+    name: flutter_patterns_present
+    config:
+      contains:
+        - "Riverpod"
+        - "Widget"
+      regex_match:
+        - "(?i)(provider|notifier|repository|service)"
+  - type: file
+    name: flutter_project_structure
+    config:
+      must_exist:
+        - "pubspec.yaml"
+        - "lib/main.dart"
+  - type: trigger
+    name: positive_trigger_check
+    config:
+      skill_path: ps-flutter-patterns
+      mode: positive
+      threshold: 0.5
+  - type: trigger
+    name: negative_trigger_check
+    config:
+      skill_path: ps-flutter-patterns
+      mode: negative
+      threshold: 0.6
+  - type: text
+    name: no_generic_advice
+    config:
+      not_contains:
+        - "here are some general Flutter patterns"
+        - "here is how to build any mobile app"
+      regex_not_match:
+        - "(?i)(axum|tonic|ratatui|cargo\\.toml)"
+metrics:
+  - name: task_completion
+    weight: 1.0
+    threshold: 0.75
+tasks:
+  - "tasks/*.yaml"

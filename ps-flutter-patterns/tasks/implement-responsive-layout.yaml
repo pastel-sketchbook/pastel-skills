@@ -1,0 +1,12 @@
+name: implement-responsive-layout
+id: implement-responsive-layout
+description: Create a responsive editor layout with LayoutBuilder breakpoints
+inputs:
+  prompt: |
+    I need to implement a responsive editor screen in my Flutter app. It should:
+    - Use LayoutBuilder with an 800px breakpoint
+    - Show a two-column layout (2:1 ratio) on wide screens
+    - Stack vertically on narrow screens
+    - Include a slide viewer and notes panel
+    - Support swipe navigation between items
+    Follow Pastel Sketchbook Flutter patterns for responsive layouts.

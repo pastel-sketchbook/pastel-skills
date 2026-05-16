@@ -1,0 +1,14 @@
+name: scaffold-flutter-app
+id: scaffold-flutter-app
+description: Create a new Flutter app with standard Pastel Sketchbook patterns
+inputs:
+  prompt: |
+    I need to scaffold a new Flutter app following Pastel Sketchbook patterns.
+    Create the basic project structure with:
+    - lib/main.dart with ProviderScope and MaterialApp
+    - Riverpod annotation-based providers with code generation
+    - A Dio HTTP client provider with logging
+    - A storage service using path_provider for local persistence
+    - A repository layer coordinating the services
+    - analysis_options.yaml with very_good_analysis
+    Make sure to follow Pastel Sketchbook conventions for Flutter apps.

@@ -1,0 +1,13 @@
+name: add-riverpod-provider
+id: add-riverpod-provider
+description: Add a Riverpod async notifier for managing a list of items
+inputs:
+  prompt: |
+    I need to add a new Riverpod provider to manage a list of projects in my
+    Flutter app. The provider should:
+    - Use @Riverpod annotation with keepAlive: true
+    - Load initial data from a storage service
+    - Support adding, updating, and deleting items
+    - Persist changes to disk after each mutation
+    - Handle async errors with proper status tracking
+    Follow Pastel Sketchbook Flutter patterns for state management.

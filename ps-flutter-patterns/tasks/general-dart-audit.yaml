@@ -1,0 +1,12 @@
+name: general-dart-audit
+id: general-dart-audit
+description: "ANTI-TRIGGER: General Dart code quality audit (should not invoke ps-flutter-patterns)"
+inputs:
+  prompt: |
+    I need a general code quality audit for my Dart project. Can you check for:
+    - Unused imports and variables
+    - Error handling best practices
+    - Type safety and null safety
+    - Test coverage
+    This is for a generic Dart CLI package, not a Flutter app.
+    Use standard Dart linting and analysis tools.

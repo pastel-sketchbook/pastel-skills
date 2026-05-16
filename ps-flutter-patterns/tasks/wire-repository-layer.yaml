@@ -1,0 +1,13 @@
+name: wire-repository-layer
+id: wire-repository-layer
+description: Implement a repository that coordinates storage and API services
+inputs:
+  prompt: |
+    I need to add a repository layer to my Flutter app following the
+    adapter/repository pattern. The repository should:
+    - Accept StorageService and ApiService via constructor injection
+    - Expose a Riverpod provider with keepAlive: true
+    - Provide async methods for data fetching that coordinate both services
+    - Include pure data-mapping helpers for list transformations
+    - Never be imported directly by UI widgets
+    Follow Pastel Sketchbook conventions for Flutter repositories.

@@ -1,0 +1,11 @@
+name: setup-dynamic-theming
+id: setup-dynamic-theming
+description: Add dynamic theme switching with persisted preferences
+inputs:
+  prompt: |
+    I need to add dynamic theme switching to my Flutter app. It should:
+    - Define multiple AppTheme models with ColorScheme.fromSeed
+    - Use a Riverpod notifier backed by SharedPreferences
+    - Wire the theme into MaterialApp via ConsumerWidget
+    - Support both light and dark themes
+    Follow Pastel Sketchbook Flutter theming patterns.
