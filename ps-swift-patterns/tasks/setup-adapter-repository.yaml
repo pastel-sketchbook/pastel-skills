@@ -1,0 +1,13 @@
+name: setup-adapter-repository
+id: setup-adapter-repository
+description: Wire adapter protocols and repository pattern for service coordination
+inputs:
+  prompt: |
+    I need to set up the adapter/repository pattern for my Swift app.
+    Create:
+    - A StorageAdapter protocol for file persistence
+    - An APIAdapter protocol for external API calls
+    - A concrete StorageService implementation using FileManager
+    - A Repository class that coordinates both adapters
+    - Pure list-transform functions in the repository for state updates
+    Follow Pastel Sketchbook Swift conventions with protocol-based ports.

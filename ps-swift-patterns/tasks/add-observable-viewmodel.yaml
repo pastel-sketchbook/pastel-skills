@@ -1,0 +1,13 @@
+name: add-observable-viewmodel
+id: add-observable-viewmodel
+description: Add an @Observable view model with async operations and error handling
+inputs:
+  prompt: |
+    I have an existing Swift/SwiftUI app. I need to add a new @Observable view model
+    that manages a list of items. It should:
+    - Load items from a repository on startup
+    - Support processing items with status tracking (idle/processing/ready/error)
+    - Handle errors with user-facing messages
+    - Support cancellable import operations using Task
+    - Sanitize stale processing states on load
+    Follow Pastel Sketchbook Swift patterns.

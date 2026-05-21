@@ -1,0 +1,14 @@
+name: scaffold-swift-app
+id: scaffold-swift-app
+description: Create a new Swift/SwiftUI app with standard Pastel Sketchbook patterns
+inputs:
+  prompt: |
+    I need to scaffold a new Swift/SwiftUI app following Pastel Sketchbook patterns.
+    Create the basic project structure with:
+    - Package.swift with macOS 14+ and iOS 17+ targets
+    - App.swift with @main entry and Environment-based DI
+    - An @Observable @MainActor view model
+    - A repository with adapter protocol
+    - A simple Codable model with copyWith
+    - Local JSON persistence via FileManager
+    Make sure to follow Pastel Sketchbook conventions for Swift apps.

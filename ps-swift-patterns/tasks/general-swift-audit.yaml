@@ -1,0 +1,12 @@
+name: general-swift-audit
+id: general-swift-audit
+description: "ANTI-TRIGGER: General Swift code quality audit (should not invoke ps-swift-patterns)"
+inputs:
+  prompt: |
+    I need a general code quality audit for my Swift project. Can you check for:
+    - Unused variables and imports
+    - Memory management issues (retain cycles)
+    - Concurrency safety
+    - Test coverage
+    This is for a generic Swift project, not specific to any UI framework or architecture.
+    Use standard Swift linting and analysis tools.

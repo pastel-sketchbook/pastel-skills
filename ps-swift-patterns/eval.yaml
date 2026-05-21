@@ -1,0 +1,48 @@
+name: ps-swift-patterns-eval
+description: Evaluation suite for ps-swift-patterns skill
+skill: ps-swift-patterns
+version: "1.0"
+config:
+  trials_per_task: 1
+  timeout_seconds: 300
+  parallel: false
+  executor: copilot-sdk
+  model: claude-sonnet-4.6
+graders:
+  - type: text
+    name: swift_patterns_present
+    config:
+      contains:
+        - "Observable"
+        - "SwiftUI"
+      regex_match:
+        - "(?i)(viewmodel|repository|adapter|environment)"
+  - type: text
+    name: swift_project_structure
+    config:
+      contains:
+        - "Package.swift"
+        - "Sources/"
+  - type: trigger
+    name: positive_trigger_check
+    config:
+      skill_path: .
+      mode: positive
+      threshold: 0.5
+  - type: text
+    name: no_generic_advice
+    config:
+      not_contains:
+        - "here are some general Swift patterns"
+        - "here is how to build any app"
+      regex_not_match:
+        - "(?i)(axum|tonic|ratatui|flutter|riverpod)"
+metrics:
+  - name: task_completion
+    weight: 1.0
+    threshold: 0.75
+tasks:
+  - "tasks/scaffold-swift-app.yaml"
+  - "tasks/add-observable-viewmodel.yaml"
+  - "tasks/setup-adapter-repository.yaml"
+  - "tasks/implement-transitions.yaml"

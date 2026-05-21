@@ -1,0 +1,12 @@
+name: implement-transitions
+id: implement-transitions
+description: Add animated slide transitions with custom SwiftUI modifiers
+inputs:
+  prompt: |
+    I need to implement animated transitions between views in my SwiftUI app.
+    Support these transition types: fade, slide, wipe, zoom, none.
+    - Use .id() to trigger view identity changes
+    - Use .transition() with asymmetric transitions based on navigation direction
+    - Implement a custom WipeModifier with animatable progress
+    - Wrap navigation actions with withAnimation
+    Follow Pastel Sketchbook Swift patterns for transitions.
