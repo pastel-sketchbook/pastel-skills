@@ -1,0 +1,8 @@
+name: general-lint-check
+id: general-lint-check
+description: "ANTI-TRIGGER: General linting request (should not invoke ps-nose-dedup)"
+inputs:
+  prompt: |
+    Can you run the linter on my Go project and fix any warnings? I want to
+    check for unused variables, formatting issues, and vet warnings. Just
+    standard linting, no duplication analysis needed.

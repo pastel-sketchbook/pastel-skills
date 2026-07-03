@@ -1,0 +1,8 @@
+name: dedup-go-project
+id: dedup-go-project
+description: Detect and fix duplicated code in a Go project using nose
+inputs:
+  prompt: |
+    I have a Go project with some duplicated code. Can you run nose to find
+    the duplication families and fix them? Extract helper functions where
+    appropriate and make sure all tests still pass after each change.

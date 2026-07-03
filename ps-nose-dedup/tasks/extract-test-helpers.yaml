@@ -1,0 +1,9 @@
+name: extract-test-helpers
+id: extract-test-helpers
+description: Deduplicate test code by extracting shared test helpers
+inputs:
+  prompt: |
+    My test files have a lot of repeated setup and assertion code. Can you
+    use nose to find the duplicated test scaffolding and extract proper test
+    helpers? Make sure the helpers use t.Helper() in Go so failure messages
+    point to the right place.

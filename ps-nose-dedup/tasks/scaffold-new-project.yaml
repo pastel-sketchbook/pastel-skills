@@ -1,0 +1,8 @@
+name: scaffold-new-project
+id: scaffold-new-project
+description: "ANTI-TRIGGER: Scaffold a new project (should not invoke ps-nose-dedup)"
+inputs:
+  prompt: |
+    I need to create a new Go web service from scratch. Can you scaffold the
+    project with a proper directory structure, HTTP handlers, and a Taskfile?
+    I want to start with a clean codebase.

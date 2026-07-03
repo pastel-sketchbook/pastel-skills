@@ -1,0 +1,9 @@
+name: find-copy-paste-code
+id: find-copy-paste-code
+description: Scan a codebase for copy-paste duplication and report families
+inputs:
+  prompt: |
+    Can you scan this codebase for duplicated code? I want to know how many
+    duplication families exist, which ones are in production code vs tests,
+    and which are worth fixing. Prioritize by confidence level and show me
+    the details of each family.
