@@ -15,10 +15,10 @@ If not installed, stop and report: "duplication detection requires nose (https:/
 Run at the project root:
 
 ```bash
-nose query .
+nose query . --cache-dir .nose-cache
 ```
 
-This analyzes all source files and reports duplicated-code families ranked by extractability.
+This analyzes all source files and reports duplicated-code families ranked by extractability. Reuse the same cache directory for drill-down and verification queries; it is transactional, safe to share between concurrent runs, and damaged entries are recomputed.
 
 ### Understanding the output
 
@@ -27,14 +27,16 @@ This analyzes all source files and reports duplicated-code families ranked by ex
 | `copies` | Number of duplicated instances |
 | `shared` | Lines shared across copies / total lines, plus parameter count (`p`) |
 | `removable` | Approximate lines removable by extraction |
-| `witness` | Confidence: `exact` > `shared-core` > `copy-paste` > `similar` |
+| `witness` | Confidence: `exact` > `shared-core` > `near` > `copy-paste` > `similar` |
 | `scope` | `prod` or `test` |
 | `id` | Unique family identifier for drill-down |
+| `hazard` | Refactoring risk score (sort with `sort=hazard`) |
 
 ### Witness levels explained
 
 - **exact** -- proven identical behavior across all copies. Machine-verified.
-- **shared-core** -- copies share a proven core computation, but may differ in surrounding context.
+- **shared-core** -- copies share a proven core computation, but may differ in surrounding context (e.g. async/sync mirrors, collection-idiom equivalences).
+- **near** -- connected near-match recovered via bounded same-unit windows. Coherent refactoring candidate that does not share one exact fragment.
 - **copy-paste** -- structural match. Same AST shape with parameter slots where code diverges.
 - **similar** -- near-duplicate. Structurally close but differences may be intentional.
 
@@ -42,7 +44,7 @@ This analyzes all source files and reports duplicated-code families ranked by ex
 
 Prioritize families in this order:
 
-1. **Production shared-core / exact** -- proven behavioral duplication in production code. Always fix.
+1. **Production shared-core / exact / near** -- proven or near-proven behavioral duplication in production code. Always fix.
 2. **Production copy-paste** (removable > 4) -- high-confidence structural duplication in production code.
 3. **Test copy-paste** (removable > 4) -- duplicated test scaffolding. Fix by extracting test helpers.
 4. **Similar** -- near-duplicates. Review but may be intentional variation.
@@ -55,6 +57,7 @@ Skip families nose holds below the default surface (shallow-extraction, hidden) 
 # Only proven families
 nose query . witness=shared-core
 nose query . witness=exact
+nose query . witness=near
 
 # Only production code
 nose query . scope=prod
@@ -65,6 +68,9 @@ nose query . scope=test
 # Sort by volume of duplicated code
 nose query . sort=value
 
+# Sort by refactoring risk
+nose query . sort=hazard
+
 # Group totals by directory
 nose query . group=dir
 
@@ -73,6 +79,12 @@ nose query . group=witness
 
 # Include everything (below default surface too)
 nose query . all
+
+# Run only specific detection channels (default: syntax,semantic,near)
+nose query . --mode syntax,semantic
+
+# Multi-root query across directories
+nose query -r src -r lib
 ```
 
 ## Step 3: Drill-down
@@ -193,28 +205,76 @@ When the duplication is inherent to a code generation pattern, consider generics
 After each extraction:
 
 1. **Run tests** -- confirm no regressions.
-2. **Re-run nose** -- `nose query .` and confirm the family count decreased.
+2. **Re-run nose** -- `nose query . --cache-dir .nose-cache` and confirm the family count decreased.
 3. **Acceptable remainder** -- families at or below the shallow-extraction threshold are fine.
+
+## Cache Management
+
+`nose` 0.20.0 bounds a query cache at 5 GiB by default. Keep the project-local `.nose-cache` ignored by Git, adding it to `.gitignore` if needed. Inspect or reclaim only that directory when needed:
+
+```bash
+nose cache status --dir .nose-cache
+nose cache prune --dir .nose-cache
+```
+
+Use `--cache-max-bytes <size>` or `[query].cache-max-bytes` in `nose.toml` for a smaller limit. Do not use `nose cache clear` in a routine deduplication task: it removes every nose-managed entry in the selected directory.
+
+## Semantic Packs
+
+Semantic packs are local, explicit opt-ins and are disabled by default. Do not add `--semantic-pack` to normal deduplication scans. If a project intentionally uses a typed v1 pack, require its checked-in content-pinned lock with `--semantic-pack-lock <file>`; never fetch, install, or create pack content during a deduplication task.
 
 ## Nose Command Reference
 
 | Command | Purpose |
 |---|---|
-| `nose query .` | Default surface scan |
+| `nose query . --cache-dir .nose-cache` | Default surface scan with reusable analysis cache (syntax + semantic + near channels) |
 | `nose query . all` | Include shallow-extraction and hidden families |
 | `nose query . id=<id> full` | Drill into one family with diff and proposal |
 | `nose query . sort=value` | Sort by duplicated volume |
 | `nose query . sort=extractability` | Sort by ease of extraction (default) |
+| `nose query . sort=hazard` | Sort by refactoring risk score |
 | `nose query . group=dir` | Totals by directory |
 | `nose query . group=witness` | Totals by confidence level |
 | `nose query . witness=shared-core` | Filter to proven shared computation |
 | `nose query . witness=exact` | Filter to proven identical behavior |
+| `nose query . witness=near` | Filter to connected near-match families |
 | `nose query . scope=prod` | Filter to production code only |
 | `nose query . scope=test` | Filter to test code only |
 | `nose query . members>3` | Families with more than 3 copies |
 | `nose query . path~internal` | Families in paths containing "internal" |
 | `nose query . --format markdown` | Markdown output for PR descriptions |
-| `nose query . --format sarif` | SARIF output for CI annotations |
-| `nose query . --format json` | JSON output for tooling integration |
+| `nose query . --format sarif` | SARIF output for CI annotations (tiered: strict/review/report-only) |
+| `nose query . --format json` | Versioned JSON output for tooling integration |
+| `nose query . --mode syntax,semantic` | Run only specific detection channels |
+| `nose query -r src -r lib` | Multi-root query across directories |
+| `nose query . base=<git-ref>` | Divergent-edit gate: detect duplication divergence since a base ref |
 | `nose query . --fail-on any` | CI gate: exit non-zero if any families found |
 | `nose query . --fail-on new --baseline nose.baseline.json` | CI gate: fail only on new duplication |
+| `nose cache status --dir .nose-cache` | Report active, historical, and reclaimable cache storage |
+| `nose cache prune --dir .nose-cache` | Remove old, orphaned, and over-budget entries from this cache |
+| `nose capabilities` | Machine-readable capability contract (JSON) |
+
+## Inline Suppression
+
+Add `nose-ignore` comments to suppress specific families when duplication is intentional:
+
+```
+// nose-ignore
+```
+
+The comment must appear on or immediately before the duplicated region. Suppressed families are excluded from the default surface but still visible with `nose query . all`.
+
+## CI Divergent-Edit Gate
+
+For CI pipelines, use `base=<ref>` to detect new or diverging duplication introduced since a branch point:
+
+```bash
+nose query . base=origin/main --format sarif
+```
+
+This emits SARIF with tiered rules:
+- **strict** -- default-failing; confirmed divergent propagation
+- **review** -- advisory; mixed or test-scope evidence
+- **report-only** -- informational; new copies without a base family
+
+Control the gate policy with `gate.fail_default` in nose configuration. Use `--format json` for machine-readable, versioned output with tier/gate fields.

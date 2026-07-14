@@ -25,12 +25,12 @@ allowed-tools:
 ## Workflow
 
 1. **Prerequisite** -- Run `nose --version`. If not installed, stop and inform the user.
-2. **Scan** -- `nose query .` at the project root. Record family count.
+2. **Scan** -- `nose query . --cache-dir .nose-cache` at the project root. Record family count and reuse the cache for all follow-up queries.
 3. **Triage** -- Prioritize per [references/workflow.md](references/workflow.md): prod shared-core first, then copy-paste (removable > 4), then test helpers.
-4. **Drill-down** -- `nose query . id=<id> full` for each family. Read the diff and extraction proposal.
+4. **Drill-down** -- `nose query . --cache-dir .nose-cache id=<id> full` for each family. Read the diff and extraction proposal.
 5. **Extract** -- Apply refactoring: helper function, test helper (`t.Helper()` in Go), or shared module.
 6. **Verify** -- Run tests after each extraction.
-7. **Re-scan** -- `nose query .` again. Confirm family count decreased.
+7. **Re-scan** -- `nose query . --cache-dir .nose-cache` again. Confirm family count decreased.
 8. **Report** -- Output before/after summary.
 
 ## Error Handling
