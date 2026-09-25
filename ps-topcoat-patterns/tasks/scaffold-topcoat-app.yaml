@@ -1,0 +1,51 @@
+name: scaffold-topcoat-app
+id: scaffold-topcoat-app
+description: Scaffold a new Topcoat 0.9 full-stack app following Pastel Sketchbook patterns
+tags:
+  - positive-trigger
+  - scaffold
+inputs:
+  prompt: |
+    Scaffold a new Topcoat (tokio-rs/topcoat 0.9) full-stack Rust web app in the
+    current directory following Pastel Sketchbook patterns. I need:
+    - Cargo.toml and a thin src/main.rs
+    - module-based routing rooted in src/app.rs with a root layout and a home page
+    - a GET /health route for Kubernetes probes
+    - a request-scoped current_user(cx) helper instead of middleware
+    - tracing with a UUID v7 request id per request
+    - one test that dispatches a request through the router without binding a port
+expected:
+  should_trigger: true
+graders:
+  - type: trigger
+    name: positive_trigger_check
+    config:
+      skill_path: ps-topcoat-patterns
+      mode: positive
+      threshold: 0.5
+  - type: file
+    name: topcoat_project_structure
+    config:
+      must_exist:
+        - "Cargo.toml"
+        - "src/main.rs"
+        - "src/app.rs"
+      content_patterns:
+        - path: "Cargo.toml"
+          must_match:
+            - "topcoat\\s*="
+        - path: "src/main.rs"
+          must_match:
+            - "topcoat::(start|serve)"
+        - path: "src/app.rs"
+          must_match:
+            - "module_router!"
+            - "Result<impl View>"
+            - "Slot<'_>"
+  - type: text
+    name: topcoat_09_patterns
+    config:
+      regex_match:
+        - "(?i)(now_v7|uuid v7)"
+        - "(?i)(router::handle|\\.handle\\()"
+        - "(?i)module_router"

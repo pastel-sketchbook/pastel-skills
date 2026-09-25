@@ -1,0 +1,24 @@
+name: axum-json-api
+id: axum-json-api
+description: "ANTI-TRIGGER: Plain Axum JSON API (should not invoke ps-topcoat-patterns)"
+tags:
+  - negative-trigger
+inputs:
+  prompt: |
+    I need a plain Axum 0.8 JSON REST API in Rust with no HTML rendering:
+    CRUD endpoints for /api/users, shared state in Arc<AppState>, tower-http
+    tracing, and OpenAPI docs via utoipa. Which extractors should I use?
+expected:
+  should_trigger: false
+graders:
+  - type: trigger
+    name: negative_trigger_check
+    config:
+      skill_path: ps-topcoat-patterns
+      mode: negative
+      threshold: 0.6
+  - type: skill_invocation
+    name: topcoat_skill_not_loaded
+    config:
+      forbidden_skills:
+        - ps-topcoat-patterns

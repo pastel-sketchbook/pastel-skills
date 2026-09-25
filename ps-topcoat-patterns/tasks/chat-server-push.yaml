@@ -1,0 +1,33 @@
+name: chat-server-push
+id: chat-server-push
+description: Implement a chat box that pushes new messages to every open tab
+tags:
+  - positive-trigger
+  - streaming
+inputs:
+  prompt: |
+    Using Topcoat 0.9, build a chat widget: the page shows existing messages,
+    an input, and a Send button. When anyone sends a message, every open browser
+    tab should update without polling. Messages live in memory in app context.
+    Include the router setup and the document head changes this needs.
+expected:
+  should_trigger: true
+graders:
+  - type: trigger
+    name: positive_trigger_check
+    config:
+      skill_path: ps-topcoat-patterns
+      mode: positive
+      threshold: 0.5
+  - type: text
+    name: server_push_patterns
+    config:
+      contains:
+        - "live!"
+        - "emit!"
+        - "connected(cx)"
+        - ".runtime()"
+        - "runtime::script()"
+      regex_match:
+        - "(?i)subscribe"
+        - "#\\[procedure"

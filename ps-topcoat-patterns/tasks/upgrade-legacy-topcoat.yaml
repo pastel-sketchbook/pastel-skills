@@ -1,0 +1,44 @@
+name: upgrade-legacy-topcoat
+id: upgrade-legacy-topcoat
+description: Upgrade a Topcoat 0.6-era module to Topcoat 0.9 APIs
+tags:
+  - positive-trigger
+  - migration
+inputs:
+  prompt: |
+    legacy-0-6-app.rs was written for Topcoat 0.6. Upgrade it in place to
+    Topcoat 0.9 so it compiles against topcoat = "0.9". Keep the behavior the
+    same: branded 404 in the layout, live search via the shard, like button via
+    the procedure, and the recursive comment thread. Summarize each change.
+  files:
+    - path: legacy-0-6-app.rs
+expected:
+  should_trigger: true
+graders:
+  - type: trigger
+    name: positive_trigger_check
+    config:
+      skill_path: ps-topcoat-patterns
+      mode: positive
+      threshold: 0.5
+  - type: file
+    name: migrated_to_09
+    config:
+      content_patterns:
+        - path: "legacy-0-6-app.rs"
+          must_match:
+            - "Result<impl View>"
+            - "Slot<'_>"
+            - "error_boundary"
+            - "Child<'_>"
+            - "\\.boxed\\(\\)"
+            - "signal\\(cx"
+            - "#\\[key\\("
+            - "\\.runtime\\(\\)"
+          must_not_match:
+            - "signal\\s+query\\s*="
+            - "#\\[component\\(boxed\\)\\]"
+            - "\\.procedure\\("
+            - "\\.shard\\("
+            - "slot:\\s*Result"
+            - "key:\\s*post\\.id"

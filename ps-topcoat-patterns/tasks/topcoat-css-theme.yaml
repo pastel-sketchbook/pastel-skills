@@ -1,0 +1,24 @@
+name: topcoat-css-theme
+id: topcoat-css-theme
+description: "ANTI-TRIGGER: Adobe Topcoat CSS library (should not invoke ps-topcoat-patterns)"
+tags:
+  - negative-trigger
+inputs:
+  prompt: |
+    My PhoneGap app uses the old Adobe Topcoat CSS library (topcoat.io) for
+    buttons and lists. How do I rebuild its theme with custom Stylus variables
+    so the primary buttons use my brand color?
+expected:
+  should_trigger: false
+graders:
+  - type: skill_invocation
+    name: topcoat_skill_not_loaded
+    config:
+      forbidden_skills:
+        - ps-topcoat-patterns
+  - type: text
+    name: no_rust_framework_answer
+    config:
+      not_contains:
+        - "Result<impl View>"
+        - "view!"

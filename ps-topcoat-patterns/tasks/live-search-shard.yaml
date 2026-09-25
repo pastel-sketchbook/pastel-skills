@@ -1,0 +1,35 @@
+name: live-search-shard
+id: live-search-shard
+description: Add signal-driven live search where only the results re-render on the server
+tags:
+  - positive-trigger
+  - runtime
+inputs:
+  prompt: |
+    In my Topcoat 0.9 app, add a /search page with a text input that filters
+    products as the user types. Products come from a database handle registered
+    with .app_context(db). Only the results list should re-render on the server,
+    not the whole page, and the input must keep focus while typing. Show the Rust
+    code for the page and the server-rendered part, and explain any security
+    considerations.
+expected:
+  should_trigger: true
+graders:
+  - type: trigger
+    name: positive_trigger_check
+    config:
+      skill_path: ps-topcoat-patterns
+      mode: positive
+      threshold: 0.5
+  - type: text
+    name: signals_and_shards
+    config:
+      contains:
+        - "signal(cx"
+        - "#[shard"
+        - "Result<impl View>"
+      regex_match:
+        - "\\$\\([^)]*\\.get\\(\\)"
+        - "(?i)(validat|authori[sz])"
+      regex_not_match:
+        - "signal\\s+[a-z_]+\\s*=\\s*"
