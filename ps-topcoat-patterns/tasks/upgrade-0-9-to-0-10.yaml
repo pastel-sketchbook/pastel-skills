@@ -1,0 +1,39 @@
+name: upgrade-0-9-to-0-10
+id: upgrade-0-9-to-0-10
+description: Upgrade a Topcoat 0.9 module-routed page to Topcoat 0.10 and adopt client-side navigation
+tags:
+  - positive-trigger
+  - migration
+inputs:
+  prompt: |
+    legacy-0-9-post.rs is src/app/posts/post_id.rs from a Topcoat 0.9 app using
+    module routing. Upgrade it in place to topcoat = "0.10" so it still serves
+    /posts/{post_id} and /posts/{post_id}/comments/{comment_id}, keep the draft
+    length warning working, and switch the nav anchors to client-side navigation
+    without full page reloads. Summarize each change.
+  files:
+    - path: legacy-0-9-post.rs
+expected:
+  should_trigger: true
+graders:
+  - type: trigger
+    name: positive_trigger_check
+    config:
+      skill_path: ps-topcoat-patterns
+      mode: positive
+      threshold: 0.5
+  - type: file
+    name: migrated_to_010
+    config:
+      content_patterns:
+        - path: "legacy-0-9-post.rs"
+          must_match:
+            - "module_param!\\(\\s*pub\\s+post_id"
+            - "path_param!\\(\\s*pub\\s+comment_id"
+            - "len\\(\\)\\s*>\\s*280usize"
+            - "runtime::script\\(\\)"
+            - "(link\\(|link_attrs\\()"
+          must_not_match:
+            - "path_param!\\(\\s*pub\\s+post_id"
+            - "280\\.0"
+            - "SCRIPT"

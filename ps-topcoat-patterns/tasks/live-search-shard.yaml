@@ -6,7 +6,7 @@ tags:
   - runtime
 inputs:
   prompt: |
-    In my Topcoat 0.9 app, add a /search page with a text input that filters
+    In my Topcoat 0.10 app, add a /search page with a text input that filters
     products as the user types. Products come from a database handle registered
     with .app_context(db). Only the results list should re-render on the server,
     not the whole page, and the input must keep focus while typing. Show the Rust

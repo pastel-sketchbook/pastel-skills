@@ -1,13 +1,13 @@
 name: upgrade-legacy-topcoat
 id: upgrade-legacy-topcoat
-description: Upgrade a Topcoat 0.6-era module to Topcoat 0.9 APIs
+description: Upgrade a Topcoat 0.6-era module to Topcoat 0.10 APIs
 tags:
   - positive-trigger
   - migration
 inputs:
   prompt: |
     legacy-0-6-app.rs was written for Topcoat 0.6. Upgrade it in place to
-    Topcoat 0.9 so it compiles against topcoat = "0.9". Keep the behavior the
+    Topcoat 0.10 so it compiles against topcoat = "0.10". Keep the behavior the
     same: branded 404 in the layout, live search via the shard, like button via
     the procedure, and the recursive comment thread. Summarize each change.
   files:
@@ -22,7 +22,7 @@ graders:
       mode: positive
       threshold: 0.5
   - type: file
-    name: migrated_to_09
+    name: migrated_to_010
     config:
       content_patterns:
         - path: "legacy-0-6-app.rs"

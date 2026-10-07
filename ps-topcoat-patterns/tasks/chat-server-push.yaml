@@ -6,7 +6,7 @@ tags:
   - streaming
 inputs:
   prompt: |
-    Using Topcoat 0.9, build a chat widget: the page shows existing messages,
+    Using Topcoat 0.10, build a chat widget: the page shows existing messages,
     an input, and a Send button. When anyone sends a message, every open browser
     tab should update without polling. Messages live in memory in app context.
     Include the router setup and the document head changes this needs.

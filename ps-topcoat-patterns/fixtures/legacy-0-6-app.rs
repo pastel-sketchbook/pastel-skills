@@ -1,5 +1,5 @@
-// Topcoat 0.6-era app module. Upgrade target: Topcoat 0.9.
-// Uses APIs removed in 0.7-0.9: `-> Result` views, `slot: Result`,
+// Topcoat 0.6-era app module. Upgrade target: Topcoat 0.10.
+// Uses APIs removed in 0.7-0.10: `-> Result` views, `slot: Result`,
 // `child: View`, `#[component(boxed)]`, the `signal x = v;` DSL,
 // component `key:` props, and `.procedure()` / `.shard()` registration.
 

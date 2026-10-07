@@ -1,12 +1,12 @@
 name: scaffold-topcoat-app
 id: scaffold-topcoat-app
-description: Scaffold a new Topcoat 0.9 full-stack app following Pastel Sketchbook patterns
+description: Scaffold a new Topcoat 0.10 full-stack app following Pastel Sketchbook patterns
 tags:
   - positive-trigger
   - scaffold
 inputs:
   prompt: |
-    Scaffold a new Topcoat (tokio-rs/topcoat 0.9) full-stack Rust web app in the
+    Scaffold a new Topcoat (tokio-rs/topcoat 0.10) full-stack Rust web app in the
     current directory following Pastel Sketchbook patterns. I need:
     - Cargo.toml and a thin src/main.rs
     - module-based routing rooted in src/app.rs with a root layout and a home page
@@ -43,7 +43,7 @@ graders:
             - "Result<impl View>"
             - "Slot<'_>"
   - type: text
-    name: topcoat_09_patterns
+    name: topcoat_010_patterns
     config:
       regex_match:
         - "(?i)(now_v7|uuid v7)"

@@ -1,35 +1,46 @@
 # Topcoat Full-Stack Patterns — Reference
 
 Battle-tested patterns for Pastel Sketchbook Topcoat apps — copy, adapt, do **not** reinvent.
-Targets **Topcoat 0.9.0** (`tokio-rs/topcoat`), Rust **1.98+**, edition 2024. Full-item snippets come from a scratch app built, tested, and curl-checked against `topcoat = "0.9"` + `toasty = "0.11"` (Rust 1.98.1); short `Ok(view! { .. })` fragments go inside a handler body.
+Targets **Topcoat 0.10.0** (`tokio-rs/topcoat`), Rust **1.98+**, edition 2024. Full-item snippets come from scratch apps built, tested, and curl-checked against `topcoat = "0.9"` + `toasty = "0.11"` (Rust 1.98.1), with the 0.10 additions (`module_param!`, `runtime::link`, `#[record]`, tuples, `fmt --check --rustfmt`) re-verified against `topcoat = "0.10"` (Rust 1.99); short `Ok(view! { .. })` fragments go inside a handler body.
 
-Topcoat is early-stage: expect breaking changes between minor versions. For older apps see [releases.md](releases.md) first.
+Topcoat is early-stage: expect breaking changes between minor versions. For older apps see [releases.md](releases.md) first. Upstream ships a compact API guide at [`llms.txt`](https://github.com/tokio-rs/topcoat/blob/main/llms.txt) and guides under [`docs/`](https://github.com/tokio-rs/topcoat/tree/main/docs) (0.10+).
 
 ## 1. Project setup
 
 ```sh
 cargo new my-app && cd my-app
-cargo add topcoat@0.9
+cargo add topcoat@0.10
 cargo add tokio --features rt-multi-thread,macros,sync,time
 cargo add serde --features derive
 cargo add toasty --features sqlite          # or postgresql / mysql
 cargo add tracing tracing-subscriber --features tracing-subscriber/env-filter
 cargo add uuid --features v7
 cargo add --dev http
-cargo install topcoat-cli --version 0.9.0 --locked   # CLI must match the crate
+cargo install topcoat-cli --version 0.10.0 --locked  # CLI must match the crate
+rustup component add rustfmt
+printf 'edition = "2024"\n' > rustfmt.toml           # topcoat fmt --rustfmt pipes stdin
 touch Topcoat.toml                                   # marker for editor `topcoat fmt`
 ```
 
-Check versions with `cargo tree -i topcoat` and `cargo install --list | grep topcoat-cli` (the CLI has no `--version` flag; `topcoat dev` warns on mismatch).
+Check versions with `cargo tree -i topcoat` and `topcoat --version` (0.10+; `topcoat dev` also warns on mismatch).
 
 CLI commands:
 
 | Command | Purpose |
 |---|---|
-| `topcoat dev` | Build, run, rebuild on change, stateful hot reload. `HOST`/`PORT` override bind. Press `r` to rebuild. |
-| `topcoat fmt [paths]` | Format `view!`/`live!`/`mail!` bodies. Run with `cargo fmt`. `--stdin` for editors. |
+| `topcoat dev [--bin x]` | Build, run, rebuild on change, stateful hot reload. Honors `[package] default-run`. `HOST`/`PORT` override bind. Press `r` to rebuild. |
+| `topcoat fmt --rustfmt [paths]` | rustfmt, then `view!`/`live!`/`mail!` bodies; both must succeed. `--stdin` for editors. |
+| `topcoat fmt --check --rustfmt` | CI gate: exit 1 on differences, writes nothing. |
 | `topcoat asset bundle [--release]` | Scan the binary for `asset!` and write `target/<profile>/assets`. |
-| `topcoat ui init / add <name> / update` | Vendor Topcoat UI components (Tailwind, shadcn-style). |
+| `topcoat ui init / add <name> / add --all / update` | Vendor Topcoat UI components (Tailwind, shadcn-style). `--overwrite` discards local edits. |
+| `topcoat --version` | CLI version (`cargo topcoat --version` also works). |
+
+Format on save with rust-analyzer (`rust-analyzer.toml`):
+
+```toml
+[rustfmt]
+overrideCommand = ["topcoat", "fmt", "--stdin", "--rustfmt"]
+```
 
 ## 2. Project structure
 
@@ -39,6 +50,7 @@ Keep the app a **binary crate** like the official examples; discovery is link-ti
 my-app/
   Cargo.toml
   Topcoat.toml            # fmt marker
+  rustfmt.toml            # edition = "2024" (for `topcoat fmt --rustfmt`)
   build.rs                # only with the tailwind feature
   styles.css              # `topcoat ui init` theme (Tailwind input)
   components.toml         # `topcoat ui` registry state
@@ -48,7 +60,7 @@ my-app/
     app/
       health.rs           # GET /health
       posts.rs            # GET /posts, POST /posts
-      posts/post_id.rs    # GET /posts/{post_id}  (path_param! in this module)
+      posts/post_id.rs    # GET /posts/{post_id}  (module_param! in this module)
       _marketing.rs       # group: layout, no URL segment
       _marketing/pricing.rs  # GET /pricing
     components.rs         # own + vendored components
@@ -57,7 +69,7 @@ my-app/
     telemetry.rs          # tracing init + request-id layer
 ```
 
-Module names become kebab-case segments (`blog_posts` → `/blog-posts`). `_name` modules are groups. `path_param!` inside a module turns its segment into `{param}`. The macro does not scan files: every module needs a `mod` declaration.
+Module names become kebab-case segments (`blog_posts` → `/blog-posts`). `_name` modules are groups. `module_param!` inside a module turns its segment into `{param}` (0.10+; `path_param!` no longer does). `segment!(rename = "..")` overrides a static segment; one `module_param!` **or** one `segment!` per module. The macro does not scan files: every module needs a `mod` declaration.
 
 `main.rs`:
 
@@ -96,7 +108,7 @@ use topcoat::{
     asset::{AssetBundle, RouterBuilderAssetExt},
     cookie::RouterBuilderCookieExt,
     router::{Router, RouterBuilder, RouterBuilderDiscoverExt, module_router},
-    runtime::RouterBuilderRuntimeExt,
+    runtime::{PrefetchMode, RouterBuilderRuntimeExt},
 };
 
 /// Order matters: handlers + layers, values, then `.runtime()` last.
@@ -104,6 +116,7 @@ pub fn router(db: Db) -> Router {
     routes(db)
         .assets(AssetBundle::load().expect("asset bundle missing: run `topcoat asset bundle`"))
         .runtime()
+        .prefetch(PrefetchMode::Intent) // default; Viewport for small nav menus, Never to opt out
         .build()
 }
 
@@ -120,7 +133,7 @@ pub fn routes(db: Db) -> RouterBuilder {
 **Rules:**
 - `module_router!()` must be called in the root route module and registers only module-derived handlers. Chain `.discover()` for the rest.
 - Register application layers **before** `.runtime()`; `RuntimeLayer` turns page-rerun `POST`s into `GET`s for the layers after it.
-- Pages that render `topcoat::runtime::script()` need `.runtime()` **and** `.assets(...)`, or they panic.
+- Pages that render `topcoat::runtime::script()` need `.runtime()` **and** `.assets(...)`, or they panic. Always render the script through the helper (0.10 adds a `data-topcoat-usize-bits` attribute the browser needs).
 - `.app_context(T)` twice with the same type panics; wrap in newtypes (`PrimaryDb(Db)`).
 - Discovered layers need unique paths; stack several on one path with explicit `.layer(...)`.
 - `build()` panics if a layer path matches no route: fix the path, it was dead code.
@@ -145,6 +158,7 @@ Hardening knobs (defaults are safe; change deliberately):
 ```rust
 use topcoat::{
     router::{BodyLimit, OriginPolicy, Router, RouterBuilder, TrailingSlash, TrustedProxies},
+    runtime::RouterBuilderRuntimeExt,
     view::{RouterSuspenseExt, SuspenseMode},
 };
 
@@ -159,6 +173,8 @@ pub fn hardened(builder: RouterBuilder) -> Router {
         // Buffered bodies cap at 2 MiB by default (413).
         .layer(BodyLimit::max(32 * 1024 * 1024).at("/upload"))
         .suspense(SuspenseMode::Stream)
+        // Concurrent connected renders per WebSocket (default 64, extras get 429).
+        .max_runs_per_connection(64)
         .build()
 }
 ```
@@ -181,6 +197,7 @@ use topcoat::{
         error::{NotFoundError, SeeOther, see_other},
         href, layout, not_found, page, route,
     },
+    runtime::{link, link_attrs, prefetch_mode},
     view::{View, class, error_boundary, view},
 };
 
@@ -203,12 +220,13 @@ async fn shell(cx: &Cx, slot: Slot<'_>) -> Result<impl View> {
             </head>
             <body>
                 <nav>
+                    link(href: href!(page), "Home")
                     <a
-                        let link = href!(posts::page);
-                        let current = link.is_current(cx);
-                        href=(link)
+                        let posts_link = href!(posts::page);
+                        let current = posts_link.is_current(cx);
                         aria-current=(current.then_some("page"))
                         class=(class!("nav-link", "active" if current))
+                        (link_attrs(cx, posts_link, prefetch_mode(cx)))
                     >
                         "Posts"
                     </a>
@@ -284,19 +302,24 @@ Path forms:
 - Methods: `#[route(GET)]`, `#[route([GET, POST] "/form")]`, `#[route(* "/hook")]`, `#[page(POST "./export")]`.
 - `href!(handler, ParamType(v))` builds URLs; `.resolve(cx)` for a `String`; `.query(..)`, `.fragment(..)`, `.absolute()`; `.is_current(cx)` for nav state.
 
+Links (0.10+): `runtime::link(href: href!(x), "Label")` navigates without a full reload. The server renders the destination, the runtime swaps the document and title, signals declared on both pages keep their values, and back/forward restore scroll. It renders a plain `<a>`, so it works without JS. Modifier clicks, downloads, and external links behave normally. For custom markup, spread `link_attrs(cx, href, prefetch_mode(cx))` onto your own `<a>` as in the layout above, or pass `attrs: attributes! { class="x" }` to `link`. Prefetch: `prefetch: PrefetchMode::{Intent (default), Viewport, Never}` per link, `cx.with(PrefetchMode::Never)` per scope, `.prefetch(..)` per app. Prefetch renders pages the user may never open, so **page bodies must not mutate**. Keep writes in `#[route(POST)]` and procedures.
+
 Path and query params (`src/app/posts/post_id.rs` -> `/posts/{post_id}`):
 
 ```rust
 use topcoat::{
     Result,
     context::Cx,
-    router::{error::RouterErrorExt, page, path_param, query_params},
+    router::{error::RouterErrorExt, module_param, page, path_param, query_params},
     view::{View, view},
 };
 
 use crate::{context::db, models::Post};
 
-path_param!(pub post_id: u64, error = not_found);
+// Declares `PostId` AND makes this module's segment `{post_id}` (0.10+).
+module_param!(pub post_id: u64, error = not_found);
+// Captures that appear in a handler path use plain `path_param!` (any number per module).
+path_param!(pub comment_id: u64, error = not_found);
 
 #[query_params(error = bad_request)]
 struct PostQuery {
@@ -317,11 +340,23 @@ pub async fn page(cx: &Cx) -> Result<impl View> {
         <h1 data-preview=(query.preview.unwrap_or(false))>(&post.title)</h1>
     })
 }
+
+// GET /posts/{post_id}/comments/{comment_id}
+#[page("./comments/{comment_id}")]
+pub async fn comment(cx: &Cx) -> Result<impl View> {
+    let post_id = *path_param::<PostId>(cx)?;
+    let comment_id = *path_param::<CommentId>(cx)?;
+    Ok(view! { <p>"Post " (post_id) ", comment " (comment_id)</p> })
+}
 ```
 
+- `module_param!(*rest)` for catch-all modules (`/docs/{*doc_path}`); must come last and match at least one segment.
+- A module holds one `module_param!` **or** one `segment!`. For a second dynamic segment use a child module or a `./{x}` handler path with `path_param!`.
+
 **Gotchas (hit while verifying):**
-- `#[page] async fn page` (and every handler macro) defines a unit struct with the function's name in that module. A local `let page = ...` then fails with "interpreted as a unit struct". Name locals `page_no`, `current_page`, etc.
-- A root `not_found!()` registers `/{*rest}`. A `path_param!` module directly under the root (`/{id}`) conflicts with it and `build()` panics with `conflicts with registered route`. Nest params under a static segment (`/posts/{post_id}`).
+- `#[page] async fn page` (and every handler macro) defines a unit struct with the function's name in that module. A local `let page = ...` then fails with "interpreted as a unit struct". Name locals `page_no`, `current_page`, etc. Importing `runtime::link` does the same: `let link = ..` fails with "let bindings cannot shadow tuple structs" (the old `let link = href!(..)` nav idiom breaks).
+- **0.9 → 0.10:** a leftover `path_param!` in a dynamic module still compiles, but the module serves a static segment (`/posts/post-id`) and reading `PostId` **panics**. Grep for `path_param!` in module-routed files when upgrading.
+- A root `not_found!()` registers `/{*rest}`. A `module_param!` module directly under the root (`/{id}`) conflicts with it and `build()` panics with `conflicts with registered route`. Nest params under a static segment (`/posts/{post_id}`).
 - Module-derived handlers (no path string) do not implement `Route`: `.route(health)` fails to compile. They are only registered through `module_router!()`.
 
 ## 5. Views and components
@@ -559,10 +594,60 @@ async fn page(cx: &Cx) -> Result<impl View> {
 
 - `signal(cx, || init)` needs `cx: &Cx`; initial value computed on the server, then browser-owned. Pass to components as `&Signal<T>`.
 - `$(...)` runs on the server for first paint and as JS in the browser — no round trip. `@event=$(|e: Event| ...)` handlers, `:attr=$(...)` bindings, `:value` + `@input` for two-way inputs.
-- Vocabulary only: integers (unsuffixed literal = `usize`, operands same type, overflow panics), `f64`, `bool`, `String`/`&str` basics, `Option`, `Result`, `Vec`/arrays/slices, tuples; `if`, blocks, closures, `async`/`.await`, loops. Anything else → `raw!("js ${x}", rust_equiv)` or a JS string attr `@click="..."`.
+- Vocabulary only: integers (unsuffixed literal = `usize`, operands same type, overflow panics), `f64`, `bool`, `String`/`&str` basics, `Option`, `Result`, `Vec`/arrays/slices, tuples, `#[record]` structs; `if`, blocks, closures, `async`/`.await`, loops. Anything else → `raw!("js ${x}", rust_equiv)` or a JS string attr `@click="..."`.
+- `String::len()`/`str::len()` return **`usize`** (0.10+; was `f64`) and count UTF-8 bytes: `expr!(name.get().len() > 100usize)`.
 - Shorthands: `toggle`, `increment`, `decrement`, `push_str`, `get`, `set`.
 - Captured values are **snapshots** and must be vocabulary types: bind fields first (`let id = post.id;` then `$(async |_e| { like(id).await; })`), clone strings the closure needs.
 - **Every signal value coming back from the browser is user input.** Validate/clamp before use.
+
+### Records and tuples (0.10+)
+
+Use `#[record]` for structured client state instead of parallel signals:
+
+```rust
+use topcoat::{
+    Result,
+    context::Cx,
+    router::page,
+    runtime::{procedure, record, signal},
+    view::{View, view},
+};
+
+#[record]
+#[derive(Clone)] // needed for `.get()` / `.clone()`
+pub struct Todo {
+    title: String,
+    done: bool,
+}
+
+#[procedure("/api/todos/save")]
+async fn save_todo(todo: Todo) -> Result<Todo> {
+    // Records from the browser are user input: validate every field.
+    let title: String = todo.title.trim().chars().take(120).collect();
+    Ok(Todo { title, done: todo.done })
+}
+
+#[page]
+async fn page(cx: &Cx) -> Result<impl View> {
+    let todo = signal(cx, || Todo { title: "Write notes".to_owned(), done: false });
+    let product = ("Coffee".to_owned(), 4usize);
+
+    Ok(view! {
+        <p>$(todo.read().title.to_owned())</p>
+        <button @click=$(async |_e| {
+            let title = todo.get().title;
+            let saved = save_todo(Todo { title, done: true }).await;
+            todo.set(saved);
+        })>"Done"</button>
+        <p>$(if todo.get().done { "Complete" } else { "Open" })</p>
+        <p>$((product.0, product.1 + 1))</p>
+    })
+}
+```
+
+- Records: named fields, no generics. Fields can be vocabulary types or nested records (`Vec<Todo>`, `Option<Todo>`). Render fields one at a time, never the whole record. No `==` and no `..base` update syntax.
+- **Captured records ship every field to the browser, private ones included.** Never put secrets or internal IDs in a record you don't want public.
+- Tuples: `()`, `(v,)`, `(a, b)`, nested, inside collections (`items.index(0).0`); `.0`/`.1` access; borrowed fields stay borrowed, `.clone()` to own. Rendering a tuple concatenates its elements; no tuple comparison.
 
 ## 11. Shards and procedures
 
@@ -634,7 +719,7 @@ async fn like(cx: &Cx, post_id: u64) -> Result<bool> {
 - `Signal<T>` shard parameter passes the handle (`limit: $(limit)` or `limit`); only tracked reads in the shard body cause reruns.
 - Morph matches by position + tag, pinned by `id`: give reorderable items stable `id`s. Coalesced per tick; newest request wins.
 - Procedure call in `$(...)` must be browser-only (inside an event closure); server evaluation panics. `Err` fails the browser expression — return `Result<T, String>` as data if the client must handle it.
-- Arguments/returns must be in the expression vocabulary. Default endpoint paths change between builds; pass `"/abs"` for stable ones (no params). Register with `.discover()` or `.route(name)`.
+- Arguments/returns must be in the expression vocabulary (records included, 0.10+). Generated endpoint paths are deterministic (name + source location, 0.10+) but move when code moves; pass `"/abs"` for stable ones (no params). Register with `.discover()` or `.route(name)`.
 
 ## 12. Server push over WebSocket (0.9+)
 
@@ -704,6 +789,7 @@ impl Default for Chat {
 - The body runs from the top on HTTP render and again on every (re)connect: read current state each run; keep indefinite waits behind `connected(cx)`.
 - Start long jobs elsewhere (app context / spawned task) and observe them here, or reconnects restart them.
 - `connected_untracked(cx)` reads the flag without requesting a socket.
+- 0.10+: connected pages and shards share **one WebSocket per document**. A connected shard reruns on its own, even nested in a connected page or shard, so pushing to one shard no longer rerenders its connected ancestor. Each socket allows 64 concurrent renders (extras get `429`); tune with `.max_runs_per_connection(n)`.
 - Behind proxies, allow WebSocket upgrades on the app host; the origin policy rejects cross-origin handshakes.
 
 ## 13. Observability layer (UUID v7 request IDs)
@@ -774,7 +860,7 @@ async fn trace_requests(cx: &Cx, body: Body, next: Next<'_>) -> Result<Response>
 - Sessions: `.cookies().sessions(SessionConfig::default())`; `session::start(cx)` on login (persist `token_hash` + `expires_at`, never the raw token), `session::token_hash(cx)` to resolve, `stop`, `refresh`, `rotate`. Wrap in `current_user(cx)`.
 - Assets: `const LOGO: Asset = asset!("./logo.svg");` → `<img src=(LOGO)>` renders a content-hashed URL. Only handles that stay in the binary are bundled. `AssetBundle::load()` reads `target/<profile>/assets`; bundle with the same profile you run. CDN: `AssetConfig::hosted_at(url, manifest)`.
 - Tailwind: `tailwind` feature in `[dependencies]` **and** `[build-dependencies]` (`default-features = false`), `build.rs` → `topcoat::tailwind::BuildConfig::new().input("styles.css").render().unwrap()`, `<link rel="stylesheet" href=(tailwind::stylesheet!())>`.
-- UI: `ui` feature, `topcoat ui init`, `topcoat ui add button card dialog sidebar field`, commit `components.toml` + `styles.css`, `topcoat ui update` after upgrades. Components are yours to edit.
+- UI: `ui` feature, `topcoat ui init`, `topcoat ui add button card dialog sidebar field` (or `topcoat ui add --all [--registry r]`, 0.10+; existing files are skipped unless `--overwrite`, which discards local edits), commit `components.toml` + `styles.css`, `topcoat ui update` after upgrades. Components are yours to edit. UI nav items can use `runtime::link` (pass classes via `attrs:`).
 - Static dirs: `fs` feature, `.public_dir("./public")`, `.serve_dir("/downloads/{*file}", "./files")`.
 - Fonts/icons: `font-fontsource` (`fontsource_font!(GEIST, host: Asset)`), `icon-iconify`.
 
@@ -858,11 +944,14 @@ mod tests {
 - Every page/layout/component/shard: `-> Result<impl View>` + `Ok(view! { .. })`; no `?` after `view!`.
 - No side effects in component bodies or template expressions; do ordered work before building the view.
 - `#[key(..)]` on loops with components, signals, or live regions; stable `id` on reorderable DOM.
-- No local bindings that shadow handler names in the same module (`page`, `layout`, ...).
-- `href!` for internal links, never hand-written paths.
+- No local bindings that shadow handler names in the same module (`page`, `layout`, ...) or imported components (`link`).
+- `href!` for internal links, never hand-written paths; `runtime::link` / `link_attrs` for in-app navigation.
+- Page bodies are read-only (prefetch renders them speculatively); mutations live in POST routes and procedures.
+- Dynamic modules use `module_param!`; `path_param!` only for captures in handler paths.
 
 ### Security
-- Validate + authorize inside every `#[shard]`, `#[procedure]`, and on every tracked signal read.
+- Validate + authorize inside every `#[shard]`, `#[procedure]`, and on every tracked signal read; validate every field of `#[record]` values from the browser.
+- `#[record]` / captured values are fully visible to the browser (private fields too); never capture secrets.
 - Keep the default `OriginPolicy`; exempt only webhooks that verify signatures.
 - `bad_request(msg)` text is public; never include internals. Unhandled errors already hide messages.
 - Raise `BodyLimit` only per path (`.at("/upload")`).
@@ -875,20 +964,24 @@ mod tests {
 - Indefinite waits only after `if !connected(cx) { break Ok(token); }`.
 
 ### Operations
-- `topcoat-cli` version == `topcoat` version; `topcoat asset bundle --release` for release builds.
+- `topcoat-cli` version == `topcoat` version (`topcoat --version`); `topcoat asset bundle --release` for release builds.
 - `tracing` only (no `println!`); UUID v7 request IDs via the root layer.
 - No `unwrap()` outside tests; `expect("why")` for startup invariants (asset bundle).
-- `topcoat fmt && cargo fmt && cargo clippy --all-targets -- -W clippy::pedantic && cargo test`.
+- Local: `topcoat fmt --rustfmt && cargo clippy --all-targets -- -W clippy::pedantic && cargo test`.
+- CI: `topcoat fmt --check --rustfmt` (exit 1 on drift, writes nothing) before clippy/tests.
+- Extra binaries (migrations, seeders): set `[package] default-run` so `topcoat dev` picks the server.
 
 ## Cargo.toml essentials
 
 ```toml
 [package]
+name = "my-app"
 edition = "2024"
 rust-version = "1.98"
+default-run = "my-app"             # topcoat dev picks this when the crate has several binaries
 
 [dependencies]
-topcoat = "0.9"                    # features: tailwind, ui, font-fontsource, mail, websocket, sse, tower, fs, anyhow
+topcoat = "0.10"                   # features: tailwind, ui, font-fontsource, mail, websocket, sse, tower, fs, anyhow
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time"] }
 serde = { version = "1", features = ["derive"] }
 toasty = { version = "0.11", features = ["sqlite"] }
@@ -897,7 +990,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 uuid = { version = "1", features = ["v7"] }
 
 [build-dependencies]               # only with Tailwind
-# topcoat = { version = "0.9", default-features = false, features = ["tailwind"] }
+# topcoat = { version = "0.10", default-features = false, features = ["tailwind"] }
 
 [dev-dependencies]
 http = "1"

@@ -1,6 +1,6 @@
 # Topcoat Releases — Timeline and Upgrade Checklists
 
-Source: [GitHub releases](https://github.com/tokio-rs/topcoat/releases) (v0.5.0–v0.9.0) and the Tokio blog posts [Announcing Topcoat](https://tokio.rs/blog/2026-07-22-announcing-topcoat) (2026-07-22) and [Topcoat is pushing the boundary of server applications](https://tokio.rs/blog/2026-09-24-topcoat-server-applications) (2026-09-24).
+Source: [GitHub releases](https://github.com/tokio-rs/topcoat/releases) (v0.5.0–v0.10.0) and the Tokio blog posts [Announcing Topcoat](https://tokio.rs/blog/2026-07-22-announcing-topcoat) (2026-07-22) and [Topcoat is pushing the boundary of server applications](https://tokio.rs/blog/2026-09-24-topcoat-server-applications) (2026-09-24).
 
 Always upgrade the CLI with the crate: `cargo install topcoat-cli --version <X.Y.Z> --locked`. Upgrade one minor version at a time; each checklist is mechanical.
 
@@ -16,8 +16,9 @@ Always upgrade the CLI with the crate: `cargo install topcoat-cli --version <X.Y
 | 0.8.0 | 2026-09-09 | **Signals as functions** `signal(cx, ..)`, tracked server reads, page reruns, morphing, `Signal<T>` shard params, `.runtime()` required |
 | 0.8.1 | 2026-09-13 | `./` relative module paths, trailing-slash policy, `see_other` as page error, cookies on error responses, `response_headers(cx)` |
 | 0.9.0 | 2026-09-24 | **Server push** (`connected(cx)` + WebSocket), `SuspenseMode::Wait`, `#[key]` loops, richer expressions (all ints, vecs), stateful hot reload, explicit shard/procedure paths, `client_ip` + `TrustedProxies`, cloneable `Error` |
+| 0.10.0 | 2026-10-03 | **Client-side navigation** (`runtime::link`, `link_attrs`, prefetch), `#[record]` structs, tuples in expressions, one shared WebSocket per document (shards rerender independently), **`module_param!`** split from `path_param!`, `topcoat ui add --all`, `topcoat fmt --rustfmt`/`--check`, `topcoat --version`, `default-run`, `docs/` + `llms.txt` |
 
-Direction (blog, roadmap): server-side rendering by default with drop-down to zero-latency client UI; conventions that help LLM-driven development; Toasty as the DB layer. Roadmap items not yet shipped: `topcoat new`, static export, validations, i18n, OpenAPI, deploy docs, client-side navigation, background jobs, auth, islands.
+Direction (blog, roadmap): server-side rendering by default with drop-down to zero-latency client UI; conventions that help LLM-driven development (0.10 ships [`llms.txt`](https://github.com/tokio-rs/topcoat/blob/main/llms.txt)); Toasty as the DB layer. Roadmap items not yet shipped: `topcoat new`, static export, validations, i18n, OpenAPI, deploy docs, background jobs, auth, islands.
 
 ## 0.4 → 0.5
 
@@ -36,7 +37,7 @@ Direction (blog, roadmap): server-side rendering by default with drop-down to ze
 - Origin verification on for every router: cross-origin POST/PUT/PATCH/DELETE and WS handshakes → 403. Migrate `SessionConfigBuilder::trust_origin` → `.origin_policy(OriginPolicy::new().trust_origins([..]))`.
 - Bodies capped at 2 MiB: add `.layer(BodyLimit::max(n).at("/upload"))` for uploads. `TowerLayer::new(l).at("/api")` (no path arg).
 - Unmatched URLs skip layers/layouts: add `not_found!("/")` for branded 404s.
-- `#[path_param] struct PostId(u64)` → `path_param!(post_id: u64, error = bad_request)`.
+- `#[path_param] struct PostId(u64)` → `path_param!(post_id: u64, error = bad_request)` (then `module_param!` in 0.10 when it names a module segment).
 - `request`/`response` modules: `topcoat::router::request::{headers, uri, ..}`, `topcoat::router::response::{IntoResponse, Response}`.
 - `#[memoize]` on `Option`/`Result` returns `&Option<T>`; add `#[memoize(as_ref)]` for the old `Option<&T>`.
 - `View::render(self)` consumes; `class!` literal type is `StaticClass`; `topcoat ui update` for vendored components.
@@ -88,6 +89,37 @@ cargo install topcoat-cli --version 0.9.0 --locked
 - Vendored UI: `topcoat ui update`, merge new theme tokens (card, popover, sidebar colors).
 - Server push: emit current content, `if !connected(cx) { break Ok(token); }`, then await changes.
 - Optional: stable endpoints `#[shard("/x")]` / `#[procedure("/api/x")]`; `SuspenseMode::Wait`; `TrustedProxies` + `client_ip(cx)`; `.public_dir(..)`/`.serve_dir(..)` (`fs` feature); `StripPrefixLayer` for mounted services.
+
+## 0.9 → 0.10
+
+```toml
+topcoat = "0.10"
+```
+
+```sh
+cargo install topcoat-cli --version 0.10.0 --locked
+topcoat --version   # new in 0.10
+```
+
+**Breaking:**
+- **Module parameters.** `path_param!` no longer changes the module's URL segment. In every module that relied on it (e.g. `src/app/posts/post_id.rs` → `/posts/{post_id}`), replace it with `module_param!` and import `topcoat::router::module_param`. Catch-all modules: `path_param!(*rest)` → `module_param!(*rest)`. Options and the generated type (`PostId`) are unchanged, so `path_param::<PostId>(cx)` and `href!(post, PostId(id))` stay. Missing this compiles but serves a static segment and **panics** when the param is read.
+  - Keep `path_param!` when the handler path declares the capture (`#[page("/posts/{post_id}")]`, `#[page("./{comment_id}")]`); several `path_param!`s per module are now allowed.
+  - A module has one `module_param!` **or** one `segment!`, never both.
+- **String lengths.** `String::len()`/`str::len()` in runtime expressions return `usize` (was `f64`): `expr!(name.get().len() > 100.0)` → `expr!(name.get().len() > 100usize)`. Still UTF-8 bytes.
+- **Runtime script tag.** Render `topcoat::runtime::script()`; replace hand-written `<script src=(runtime::SCRIPT)>` tags. The helper emits `data-topcoat-usize-bits`, which the browser needs for `usize` lengths.
+- **WebSocket render cap.** 64 simultaneous renders per connection; extras get `429`. Raise with `.max_runs_per_connection(n)` on the router builder if push-heavy pages hit it.
+- **Generated endpoint URLs** for shards/procedures are now deterministic (function name + source location) but still move when code moves; keep explicit paths for anything external clients call.
+
+**Adopt:**
+- Internal nav: `<a href=(href!(x))>` → `runtime::link(href: href!(x), "Label")`, or spread `link_attrs(cx, href!(x), prefetch_mode(cx))` onto custom anchors. Signals shared by both pages keep values; back/forward restore scroll.
+- Prefetch (default `PrefetchMode::Intent`): `.prefetch(PrefetchMode::Viewport)` app-wide, `cx.with(PrefetchMode::Never)` per scope, `prefetch:` per link. **Pages render speculatively: move any mutation out of page bodies** into routes/procedures.
+- `#[record]` structs (named fields, no generics, `#[derive(Clone)]` for `.get()`) instead of parallel signals or tuple-encoded state; usable in signals, expressions, procedure args/results. All fields reach the browser, private ones included.
+- Tuples in `expr!`/`$(...)`: `(a, b)`, `()`, `(v,)`, `.0` access; no tuple comparison.
+- Nested connected shards now rerender on their own over the shared socket: you no longer need to hoist state to avoid rerendering a connected ancestor.
+- Tooling: `rustfmt.toml` with `edition = "2024"`, then `topcoat fmt --rustfmt` locally and `topcoat fmt --check --rustfmt` in CI; rust-analyzer `[rustfmt] overrideCommand = ["topcoat", "fmt", "--stdin", "--rustfmt"]`.
+- `[package] default-run = "my-app"` when the crate has extra binaries (migrations); `topcoat dev` honors it.
+- `topcoat ui add --all [--registry r] [--overwrite]` to vendor every component (`--overwrite` discards local edits).
+- Fixed: `cargo topcoat dev|fmt` works again; CLI builds keep `RUSTFLAGS`/wrappers/toolchain; `topcoat::Error` works in `thiserror` `#[from]`/`#[error(transparent)]` variants again.
 
 ## Toasty notes (DB layer, separate versioning)
 
