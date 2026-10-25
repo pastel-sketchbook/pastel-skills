@@ -1,0 +1,37 @@
+name: fluent-l10n
+id: fluent-l10n
+description: Localize a Topcoat 0.11 page with Fluent messages, Accept-Language negotiation, and element_id
+tags:
+  - positive-trigger
+  - l10n
+inputs:
+  prompt: |
+    In my Topcoat 0.11 app, localize the home page for English ("en") and German
+    ("de") using Fluent files (`src/l10n/en.ftl` and `src/l10n/de.ftl`). Negotiate
+    the request locale from the browser's Accept-Language header with a fallback
+    to English, set `lang` and `dir` on `<html>`, render a translated greeting
+    with a `name` variable and a search `<label>` + `<input>` wired together with
+    a stable HTML ID, and show the CLI command to check translations in CI.
+expected:
+  should_trigger: true
+graders:
+  - type: trigger
+    name: positive_trigger_check
+    config:
+      skill_path: ps-topcoat-patterns
+      mode: positive
+      threshold: 0.5
+  - type: text
+    name: fluent_l10n_patterns
+    config:
+      contains:
+        - "messages!"
+        - "negotiate"
+        - "accept_language"
+        - "#[layer"
+        - "t!("
+        - "element_id(cx)"
+        - "topcoat l10n check"
+      regex_match:
+        - "cx\\.with\\("
+        - "locale\\(cx\\)\\.id\\(\\)"

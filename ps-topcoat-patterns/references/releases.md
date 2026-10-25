@@ -1,6 +1,6 @@
 # Topcoat Releases — Timeline and Upgrade Checklists
 
-Source: [GitHub releases](https://github.com/tokio-rs/topcoat/releases) (v0.5.0–v0.10.0) and the Tokio blog posts [Announcing Topcoat](https://tokio.rs/blog/2026-07-22-announcing-topcoat) (2026-07-22) and [Topcoat is pushing the boundary of server applications](https://tokio.rs/blog/2026-09-24-topcoat-server-applications) (2026-09-24).
+Source: [GitHub releases](https://github.com/tokio-rs/topcoat/releases) (v0.5.0–v0.11.0) and the Tokio blog posts [Announcing Topcoat](https://tokio.rs/blog/2026-07-22-announcing-topcoat) (2026-07-22) and [Topcoat is pushing the boundary of server applications](https://tokio.rs/blog/2026-09-24-topcoat-server-applications) (2026-09-24).
 
 Always upgrade the CLI with the crate: `cargo install topcoat-cli --version <X.Y.Z> --locked`. Upgrade one minor version at a time; each checklist is mechanical.
 
@@ -17,8 +17,9 @@ Always upgrade the CLI with the crate: `cargo install topcoat-cli --version <X.Y
 | 0.8.1 | 2026-09-13 | `./` relative module paths, trailing-slash policy, `see_other` as page error, cookies on error responses, `response_headers(cx)` |
 | 0.9.0 | 2026-09-24 | **Server push** (`connected(cx)` + WebSocket), `SuspenseMode::Wait`, `#[key]` loops, richer expressions (all ints, vecs), stateful hot reload, explicit shard/procedure paths, `client_ip` + `TrustedProxies`, cloneable `Error` |
 | 0.10.0 | 2026-10-03 | **Client-side navigation** (`runtime::link`, `link_attrs`, prefetch), `#[record]` structs, tuples in expressions, one shared WebSocket per document (shards rerender independently), **`module_param!`** split from `path_param!`, `topcoat ui add --all`, `topcoat fmt --rustfmt`/`--check`, `topcoat --version`, `default-run`, `docs/` + `llms.txt` |
+| 0.11.0 | 2026-10-24 | **Localization** (`l10n`, Fluent `messages!`/`t!`, `Number`, `DateTime`, `topcoat l10n check`), **`topcoat new`** (`--recommended`/`--minimal`/wizard), `element_id(cx)`, UI `popover` + `navigation_menu` + popover-based `dropdown_menu`, edited inputs preserved (`Expr::dynamic` to override), `?` on `&topcoat::Error` from `#[memoize(as_ref)]`, `&(dyn HrefTarget + Sync)` nav tables, **Rust 1.99+** |
 
-Direction (blog, roadmap): server-side rendering by default with drop-down to zero-latency client UI; conventions that help LLM-driven development (0.10 ships [`llms.txt`](https://github.com/tokio-rs/topcoat/blob/main/llms.txt)); Toasty as the DB layer. Roadmap items not yet shipped: `topcoat new`, static export, validations, i18n, OpenAPI, deploy docs, background jobs, auth, islands.
+Direction (blog, roadmap): server-side rendering by default with drop-down to zero-latency client UI; conventions that help LLM-driven development (0.10+ ships [`llms.txt`](https://github.com/tokio-rs/topcoat/blob/main/llms.txt)); Toasty as the DB layer. Roadmap items not yet shipped: static export, validations, OpenAPI, deploy docs, background jobs, auth, islands.
 
 ## 0.4 → 0.5
 
@@ -120,6 +121,36 @@ topcoat --version   # new in 0.10
 - `[package] default-run = "my-app"` when the crate has extra binaries (migrations); `topcoat dev` honors it.
 - `topcoat ui add --all [--registry r] [--overwrite]` to vendor every component (`--overwrite` discards local edits).
 - Fixed: `cargo topcoat dev|fmt` works again; CLI builds keep `RUSTFLAGS`/wrappers/toolchain; `topcoat::Error` works in `thiserror` `#[from]`/`#[error(transparent)]` variants again.
+
+## 0.10 → 0.11
+
+```toml
+rust-version = "1.99"
+topcoat = "0.11"
+```
+
+```sh
+rustup update
+cargo install topcoat-cli --version 0.11.0 --locked
+```
+
+**Breaking / behavioral changes:**
+- **Rust MSRV is 1.99+.** Update toolchain and `rust-version = "1.99"` in `Cargo.toml`.
+- **Rerendered form controls.** When a page or shard rerenders in the browser, inputs the user has edited now keep their text — even on static `:value` bindings that read no signals. If a rerender was meant to reset/clear an input, bind it to a signal or force every render with `Expr::from(String::new()).dynamic()`.
+- **Vendored `dropdown_menu` (when updated).** Existing local copies keep working, but `topcoat ui add dropdown_menu --overwrite` (or `topcoat ui update`) switches from `<details>` to the browser Popover API:
+  - Create `let menu = element_id(cx);` and pass `target: &menu` to `dropdown_menu_trigger`, `id: &menu` to `dropdown_menu_content`, and `close: Some(&menu)` to `dropdown_menu_item`s that should close the menu (same for `dropdown_menu_sub_trigger`/`dropdown_menu_sub_content`).
+  - Replace `group-open:` classes with `group-has-[:popover-open]/dropdown-menu:`.
+  - Default alignment is now centered below the trigger; pass `align: FloatingAlign::Start` for left-edge alignment.
+- **`topcoat fmt` ignores `.gitignore` + `target/`.** Without file arguments, ignored files and Cargo's `target` directory are skipped; pass explicit paths to format ignored files.
+
+**Adopt:**
+- **Scaffolding:** `topcoat new my-app --recommended` (module router, Toasty/SQLite, runtime, Tailwind, UI, Iconify, Fontsource, todo example) or `--minimal` (or interactive wizard; `--no-interactive` for scripts).
+- **Localization (`l10n-fluent`, `l10n-number`, `l10n-datetime`, `jiff`):** load Fluent files with `messages!("./l10n/{locale}.ftl")` or feature-scoped `messages!("{mod}/l10n/{locale}.ftl")`; set `Locale` in a `#[layer]` via `negotiate(accept_language(cx), t::locales()).cloned().unwrap_or(locale!("en"))` and `next.run(&cx.with(locale), body).await` (or from URL via `module_param!(pub path_locale: Locale, error = not_found)`); set `<html lang=(locale(cx).id()) dir=(locale(cx).id().direction())>`; render `(t!(key, arg = val))`, `Number::new(x)`, `DateTime`; run `topcoat l10n check` in CI.
+- **Stable element IDs:** `let id = element_id(cx);` in components to wire `<label for=(&id)>` + `<input id=(&id)>`, popovers, and ARIA attributes across rerenders (add `#[key(..)]` when the component is inside a loop).
+- **Memoized `Result` errors:** `?` now converts `&topcoat::Error` into `topcoat::Error` directly — drop `.map_err(Clone::clone)` on `#[memoize(as_ref)]` functions returning `Result<T>`.
+- **UI `popover` and `navigation_menu`:** `topcoat ui add popover navigation_menu` (zero-JS popover panels and site nav menus; shares `floating` positioning with `side`/`align` props).
+- **Heterogeneous nav tables:** `const NAV: &[(&str, &(dyn HrefTarget + Sync))] = &[("Home", &home), ("Posts", &posts)];` and `href!(*target)` in a `for (label, target) in NAV` loop.
+- **Multiple module routers** can now coexist in one binary (discovery scopes to handlers below each router's root module). Built-in server applies Hyper timeouts (30s header timeout).
 
 ## Toasty notes (DB layer, separate versioning)
 
